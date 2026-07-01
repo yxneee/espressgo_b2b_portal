@@ -1,51 +1,42 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require('@supabase/supabase-js');
-
-const app = express();
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// This middleware logs every request so you can see it in Vercel Logs
-app.use((req, res, next) => {
-  console.log(`Incoming: ${req.method} ${req.url}`);
-  next();
-});
+module.exports = async (req, res) => {
+  // Handle CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-// STRIPE WEBHOOK (Needs raw body)
-app.use(['/api/webhook', '/webhook'], express.raw({ type: 'application/json' }));
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-app.use(cors());
-app.use(express.json());
-
-// HEALTH CHECK
-app.get('*', (req, res, next) => {
-    if (req.url === '/api' || req.url === '/') return res.send('API is Online');
-    next();
-});
-
-// THE MAIN CHECKOUT ROUTE
-// We use a wildcard (*) or match the specific paths. 
-// This ensures that even if Vercel sends '/api/index.js', it matches.
-app.post(['/', '/api/create-checkout-session'], async (req, res) => {
   const { cart, profile } = req.body;
-  
-  if (!cart) return res.status(400).json({ error: "No cart provided" });
+
+  if (!cart || !Array.isArray(cart) || cart.length === 0) {
+    return res.status(400).json({ error: "Cart is empty or invalid" });
+  }
 
   try {
     const productIds = cart.map(i => i.product_id);
-    const { data: products } = await supabase.from('products').select('*').in('id', productIds);
-    const { data: tiers } = await supabase.from('product_tiers').select('*').in('product_id', productIds);
+
+    // Fetch data from Supabase
+    const { data: products, error: pErr } = await supabase.from('products').select('*').in('id', productIds);
+    const { data: tiers, error: tErr } = await supabase.from('product_tiers').select('*').in('product_id', productIds);
+
+    if (pErr || tErr || !products) {
+      console.error("DB Error:", pErr || tErr);
+      return res.status(500).json({ error: "Failed to load product data from database" });
+    }
 
     let line_items = [];
     for (const item of cart) {
-      const product = products?.find(p => p.id === item.product_id);
-      const tier = tiers?.find(t =>
+      const product = products.find(p => p.id === item.product_id);
+      const tier = tiers.find(t =>
         t.product_id === item.product_id &&
         item.quantity >= t.min_quantity &&
         (t.max_quantity === null || item.quantity <= t.max_quantity)
@@ -63,6 +54,10 @@ app.post(['/', '/api/create-checkout-session'], async (req, res) => {
       });
     }
 
+    if (line_items.length === 0) {
+        return res.status(400).json({ error: "No valid products were found in your cart" });
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -75,11 +70,10 @@ app.post(['/', '/api/create-checkout-session'], async (req, res) => {
       },
     });
 
-    res.json({ url: session.url });
-  } catch (err) {
-    console.error("BACKEND ERROR:", err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
+    return res.status(200).json({ url: session.url });
 
-module.exports = app;
+  } catch (err) {
+    console.error("CRASH:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+};
