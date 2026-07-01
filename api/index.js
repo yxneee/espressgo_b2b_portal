@@ -13,11 +13,18 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+
 // Webhook
 app.use('/webhook', express.raw({ type: 'application/json' }));
 
 app.use(cors());
 app.use(express.json());
+
+app.use(cors({
+  origin: '*', // For testing, allow all. You can change this to your domain later.
+  methods: ['POST', 'GET', 'OPTIONS'],
+  credentials: true
+}));
 
 // TEST ROUTE
 app.get('/', (req, res) => {
