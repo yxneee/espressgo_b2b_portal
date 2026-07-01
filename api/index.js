@@ -11,6 +11,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+// DEBUG LOGGER: This will show up in your Vercel logs
+app.use((req, res, next) => {
+  console.log(`LOG: ${req.method} request to ${req.url}`);
+  next();
+});
+
 // 1. STRIPE WEBHOOK (Needs raw body)
 app.use(['/api/webhook', '/webhook'], express.raw({ type: 'application/json' }));
 
@@ -21,35 +27,29 @@ app.use(express.json());
 // 3. DIAGNOSTIC ROUTE
 app.get(['/api', '/api/index.js'], (req, res) => res.send('API is Online'));
 
-// 4. THE MAIN CHECKOUT ROUTE
-// We use a wildcard (*) or match the specific rewrite destination
-app.post(['/api/create-checkout-session', '/create-checkout-session', '/api/index.js'], async (req, res) => {
+// 4. THE MAIN CHECKOUT ROUTE (Handling multiple path possibilities)
+app.post(['/api/create-checkout-session', '/create-checkout-session', '/api/index.js', '/api/index'], async (req, res) => {
   const { cart, profile } = req.body;
   
-  // Basic validation to prevent crashes
-  if (!cart || !Array.isArray(cart) || cart.length === 0) {
-    return res.status(400).json({ error: "Cart is empty or invalid" });
+  if (!cart || !Array.isArray(cart)) {
+    return res.status(400).json({ error: "Cart is invalid" });
   }
 
   try {
     const productIds = cart.map(i => i.product_id);
-
-    // Fetch data with error handling
-    const { data: products, error: pErr } = await supabase.from('products').select('*').in('id', productIds);
-    const { data: tiers, error: tErr } = await supabase.from('product_tiers').select('*').in('product_id', productIds);
-
-    if (pErr || tErr || !products) throw new Error("Database lookup failed");
+    const { data: products } = await supabase.from('products').select('*').in('id', productIds);
+    const { data: tiers } = await supabase.from('product_tiers').select('*').in('product_id', productIds);
 
     let line_items = [];
     for (const item of cart) {
-      const product = products.find(p => p.id === item.product_id);
-      const tier = tiers.find(t =>
+      const product = products?.find(p => p.id === item.product_id);
+      const tier = tiers?.find(t =>
         t.product_id === item.product_id &&
         item.quantity >= t.min_quantity &&
         (t.max_quantity === null || item.quantity <= t.max_quantity)
       );
 
-      if (!product || !tier) continue; // Skip items with missing pricing info
+      if (!product || !tier) continue;
 
       line_items.push({
         price_data: {
@@ -60,8 +60,6 @@ app.post(['/api/create-checkout-session', '/create-checkout-session', '/api/inde
         quantity: item.quantity,
       });
     }
-
-    if (line_items.length === 0) throw new Error("No valid products found in cart");
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -77,7 +75,7 @@ app.post(['/api/create-checkout-session', '/create-checkout-session', '/api/inde
 
     res.json({ url: session.url });
   } catch (err) {
-    console.error("Stripe Error:", err.message);
+    console.error("CRASH ERROR:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
