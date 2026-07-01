@@ -469,7 +469,7 @@ document.getElementById('place-order-btn').addEventListener('click', async () =>
     console.log("Quick Order - Sending to server:", formattedCart);
 
     // 3. Request Stripe Session from your Node server (Port 3000)
-    const res = await fetch('/create-checkout-session', {
+    const res = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
