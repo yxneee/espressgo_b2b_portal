@@ -32,7 +32,7 @@ app.get('/', (req, res) => {
 });
 
 // CREATE CHECKOUT
-app.post(['/api/create-checkout-session', '/create-checkout-session'], async (req, res) => {
+app.post(['/create-checkout-session', '/api/create-checkout-session'], async (req, res) => {
   const { cart, profile } = req.body;
 
   console.log("Incoming cart:", cart);

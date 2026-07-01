@@ -3,8 +3,7 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/api/create-checkout-session", "destination": "/api/index.js" },
-    { "source": "/api/webhook", "destination": "/api/index.js" },
-    { "source": "/api/chat", "destination": "/api/index.js" },
-    { "source": "/create-checkout-session", "destination": "/api/index.js" }
+    { "source": "/create-checkout-session", "destination": "/api/index.js" },
+    { "source": "/api/chat", "destination": "/api/chat.js" }
   ]
 }
