@@ -100,7 +100,7 @@ app.post('/create-checkout-session', async (req, res) => {
       payment_method_types: ['card'],
       mode: 'payment',
       line_items,
-      success_url: `${process.env.BASE_URL}/success.html`,
+      success_url: `${process.env.BASE_URL}/account.html`,
       cancel_url: `${process.env.BASE_URL}/catalog.html`,
 
       metadata: {
@@ -179,7 +179,7 @@ app.post('/webhook', async (req, res) => {
               sku: p.sku,
               name: p.name,
               cartons: parseInt(qty),
-              price_per_carton: (session.amount_total / 100) / itemPairs.length // Simplified for now
+              price_per_carton: p.tiers[0].price
           });
       }
       console.log('✅ Order saved successfully!');

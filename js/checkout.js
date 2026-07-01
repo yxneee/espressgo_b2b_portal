@@ -1,5 +1,5 @@
 async function checkout(cart, profile) {
-  const res = await fetch('http://localhost:3000/create-checkout-session', {
+  const res = await fetch('/create-checkout-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ cart, profile })
