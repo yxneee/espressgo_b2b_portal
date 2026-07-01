@@ -1,0 +1,270 @@
+/* ============================================================
+   account.css — Styles for account.html
+   Depends on: shared.css (must be loaded first)
+   ============================================================ */
+
+
+/* ── KPI summary cards (top of Overview tab) ─────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.kpi-card {
+  background: #fff;
+  border: 1px solid #E8DDD0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  gap: 1rem;
+}
+.kpi-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.kpi-num   { font-size: 1.5rem; color: var(--brown); }
+.kpi-label { font-size: 12px; color: var(--muted); margin-bottom: .25rem; }
+.kpi-sub   { font-size: 11px; color: var(--muted-lt); }
+
+
+/* ── Order list rows ─────────────────────────────────────── */
+.order-row { border-bottom: 1px solid #F0EAE4; }
+.order-row:last-child { border-bottom: none; }
+
+/* Clickable row header */
+.order-row-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: background .15s;
+}
+.order-row-header:hover { background: #FAF8F5; }
+
+/* Status indicator dot */
+.order-dot    { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.order-id     { font-size: 13px; color: var(--brown); }
+.order-badge  { display: inline-flex; align-items: center; gap: .25rem; font-size: 10px; padding: .15rem .5rem; border-radius: 9999px; border: 1px solid; }
+.order-meta   { font-size: 11px; color: var(--muted); }
+.order-amount { color: var(--brown); white-space: nowrap; }
+
+/* Collapse/expand chevron */
+.order-chevron      { color: var(--muted-lt); font-size: 12px; flex-shrink: 0; transition: transform .2s; }
+.order-chevron.open { transform: rotate(180deg); }
+
+/* Expanded detail panel */
+.order-detail      { display: none; padding: 0 1.5rem 1.25rem; }
+.order-detail.open { display: block; }
+.order-items       { background: #FAF8F5; border: 1px solid #F0EAE4; border-radius: 12px; padding: 1rem; margin-bottom: .75rem; }
+
+/* Individual line items inside expanded order */
+.order-item-row              { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: .35rem; }
+.order-item-row:last-child   { margin-bottom: 0; }
+
+
+/* ── Business profile read view ──────────────────────────── */
+.profile-grid        { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5rem; }
+.profile-field-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .35rem; }
+.profile-field-value { font-size: 13px; color: var(--brown); }
+.profile-field-note  { font-size: 10px; color: var(--muted-lt); margin-top: 2px; }
+
+
+/* ── Billing tab rows ────────────────────────────────────── */
+.billing-row { display: flex; justify-content: space-between; align-items: center; padding: .65rem 0; border-bottom: 1px solid #F0EAE4; font-size: 13px; }
+.billing-row:last-child { border-bottom: none; }
+
+/* Credit utilisation progress bar */
+.credit-bar  { height: 8px; background: #F0EAE4; border-radius: 9999px; overflow: hidden; margin-top: .5rem; }
+.credit-fill { height: 100%; border-radius: 9999px; transition: width .7s ease; }
+
+
+/* ── Quick-link shortcut buttons (Overview bottom section) ── */
+.quick-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border: 1px solid #E8DDD0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.quick-link:hover {
+  border-color: rgba(200, 133, 58, .4);
+  background: #FAF8F5;
+}
+
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .kpi-grid     { grid-template-columns: 1fr; }
+  .profile-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   Subscriptions Tab
+   ============================================================ */
+
+.subscription-card {
+  background: #fff;
+  border: 1px solid #E8DDD0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  transition: all .2s ease;
+}
+
+.subscription-card:hover {
+  border-color: rgba(200, 133, 58, .4);
+  box-shadow: 0 6px 18px rgba(0,0,0,.04);
+}
+
+.subscription-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--brown);
+  text-transform: capitalize;
+}
+
+.subscription-card p {
+  margin: .5rem 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.subscription-card:last-child {
+  margin-bottom: 0;
+}
+
+/* Header */
+
+.subscription-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Status Badge */
+
+.subscription-status {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .25rem .6rem;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.subscription-status.active {
+  background: #ecfdf5;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.subscription-status.paused {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.subscription-status.cancelled {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Items List */
+
+.subscription-items {
+  margin-top: 1rem;
+  background: #FAF8F5;
+  border: 1px solid #F0EAE4;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.subscription-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding: .45rem 0;
+  border-bottom: 1px solid #F0EAE4;
+}
+
+.subscription-item:last-child {
+  border-bottom: none;
+}
+
+.subscription-item-name {
+  color: var(--brown);
+}
+
+.subscription-item-qty {
+  color: var(--brown-lt);
+}
+
+/* Action Buttons */
+
+.subscription-actions {
+  display: flex;
+  gap: .5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Empty State */
+
+.subscription-empty {
+  background: #fff;
+  border: 1px dashed #E8DDD0;
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.subscription-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: .75rem;
+}
+
+.subscription-empty h3 {
+  margin: 0 0 .5rem;
+  color: var(--brown);
+}
+
+.subscription-empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Mobile */
+
+@media (max-width: 700px) {
+  .subscription-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .subscription-actions {
+    flex-direction: column;
+  }
+
+  .subscription-actions button {
+    width: 100%;
+  }
+}

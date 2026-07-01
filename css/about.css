@@ -1,0 +1,54 @@
+/* ============================================================
+   about.css — Styles for about.html
+   Depends on: shared.css (must be loaded first)
+   ============================================================ */
+
+/* ── Stats grid (4 key product numbers) ─────────────────── */
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: .75rem; margin-bottom: 1.5rem; }
+.stat-card  { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; text-align: center; cursor: default; transition: transform .2s; }
+.stat-card:hover { transform: translateY(-3px); }
+.stat-num   { font-size: 2rem; color: var(--brown); margin-bottom: .2rem; }
+.stat-label { font-size: 14px; color: var(--brown); }
+.stat-sub   { font-size: 11px; color: var(--muted-lt); margin-top: 2px; }
+
+/* ── Customer segment tabs (Offices / Gyms / Events / Retail) */
+.seg-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 1.5rem; }
+.seg-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.seg-tab  {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 1rem .5rem; font-size: 11px; color: var(--muted-lt);
+  cursor: pointer; border: none; background: none; position: relative; transition: color .15s, background .15s;
+}
+.seg-tab:hover  { color: var(--brown-lt); }
+.seg-tab.active { color: var(--brown); background: #FAF8F5; }
+/* Amber underline on active tab */
+.seg-tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--amber); border-radius: 2px; }
+.seg-tab span   { letter-spacing: .06em; text-transform: uppercase; }
+.seg-body { padding: 1.75rem; display: flex; align-items: flex-start; gap: 1.5rem; }
+.seg-icon-wrap  { width: 48px; height: 48px; background: #FEF3E2; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 22px; }
+.seg-content h3 { color: var(--brown); margin-bottom: .75rem; }
+.seg-points     { display: flex; flex-wrap: wrap; gap: .5rem; }
+.seg-point      { display: inline-flex; align-items: center; gap: .35rem; font-size: 13px; color: var(--brown-lt); background: #F5F0EA; padding: .35rem .75rem; border-radius: 8px; }
+.seg-point::before { content: '›'; color: var(--amber); }
+
+/* ── Values row (icon + title + blurb) ───────────────────── */
+.values-row { display: flex; flex-wrap: wrap; gap: .75rem; }
+.value-card { display: flex; align-items: center; gap: .75rem; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: .75rem 1rem; flex: 1; min-width: 160px; transition: transform .2s; }
+.value-card:hover { transform: scale(1.03); }
+.value-icon  { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+.value-title { font-size: 14px; color: var(--brown); }
+.value-blurb { font-size: 11px; color: var(--muted-lt); margin-top: 2px; line-height: 1.4; }
+
+/* ── Competitive edge grid (vs. Café / RTD / Energy drinks) */
+.edge-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .75rem; }
+.edge-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 1.25rem; }
+.edge-vs   { font-size: 11px; color: var(--amber); letter-spacing: .08em; margin-bottom: .5rem; }
+.edge-win  { font-size: 13px; color: #9B8575; }
+
+/* ── Stage status bar (prototype / live status indicator) ── */
+.stage-bar  { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; background: #F0EAE4; border: 1px solid #E0D5C8; border-radius: 16px; padding: 1.25rem 1.75rem; }
+.stage-pill { display: flex; align-items: center; gap: .75rem; font-size: 13px; color: var(--brown); }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .edge-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .seg-body { flex-direction: column; } .seg-tabs { flex-wrap: wrap; } }

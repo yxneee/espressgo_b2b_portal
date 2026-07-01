@@ -1,0 +1,79 @@
+/* ============================================================
+   login.css — Styles for login.html (sign in + register)
+   Depends on: shared.css (must be loaded first)
+   ============================================================ */
+
+/* Full-screen split layout */
+.login-wrap { display: flex; min-height: 100vh; }
+
+/* ── Left brand panel (decorative, hidden on mobile) ─────── */
+.brand-panel {
+  display: none;
+  width: 52%;
+  background: var(--brown);
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.brand-panel::before {
+  content: '';
+  position: absolute;
+  top: -6rem; right: -6rem;
+  width: 24rem; height: 24rem;
+  border-radius: 50%;
+  background: rgba(255,255,255,.03);
+}
+.brand-panel::after {
+  content: '';
+  position: absolute;
+  top: 33%; left: -5rem;
+  width: 18rem; height: 18rem;
+  border-radius: 50%;
+  background: rgba(200,133,58,.07);
+}
+.brand-logo      { display: flex; align-items: center; gap: .75rem; margin-bottom: 3.5rem; position: relative; z-index: 1; }
+.brand-logo-icon { width: 44px; height: 44px; background: var(--amber); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; font-weight: 700; }
+.brand-heading    { position: relative; z-index: 1; }
+.brand-heading h2 { color: var(--cream); font-size: 2.25rem; line-height: 1.2; margin-bottom: 1.25rem; }
+.brand-heading p  { color: var(--muted); font-size: 14px; line-height: 1.7; max-width: 20rem; }
+.pouch-trio  { display: flex; align-items: flex-end; gap: .75rem; margin-top: 3rem; margin-bottom: .5rem; position: relative; z-index: 1; }
+.trust-list  { position: relative; z-index: 1; display: flex; flex-direction: column; gap: .9rem; }
+.trust-item  { display: flex; align-items: center; gap: .75rem; }
+.trust-icon  { width: 28px; height: 28px; border-radius: 8px; background: rgba(200,133,58,.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+.trust-text  { font-size: 13px; color: var(--muted); }
+
+/* ── Right form panel ────────────────────────────────────── */
+.form-panel  { flex: 1; display: flex; flex-direction: column; background: var(--cream-lt); overflow-y: auto; }
+.back-link   { display: inline-flex; align-items: center; gap: .5rem; font-size: 13px; color: var(--muted); padding: 1.5rem; transition: color .15s; }
+.back-link:hover { color: var(--brown); }
+.back-icon   { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.form-center { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem 3rem 3rem; }
+.form-box    { width: 100%; max-width: 400px; }
+
+/* Mobile-only logo (shown when brand panel is hidden) */
+.mobile-logo      { display: flex; align-items: center; justify-content: center; gap: .6rem; margin-bottom: 2.5rem; }
+.mobile-logo-icon { width: 36px; height: 36px; background: var(--brown); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--cream); font-size: 14px; }
+
+/* ── Password input with show/hide toggle ────────────────── */
+.pw-wrap   { position: relative; }
+.pw-toggle { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted-lt); font-size: 16px; padding: 0; line-height: 1; transition: color .15s; }
+.pw-toggle:hover { color: var(--muted); }
+.pw-wrap .input  { padding-right: 2.5rem; }
+
+/* Password strength bar (register mode only) */
+.strength-bar { display: flex; gap: 3px; margin-top: .5rem; }
+.strength-seg { flex: 1; height: 4px; border-radius: 9999px; background: #E0D5C8; transition: background .3s; }
+
+/* Server error alert */
+.server-err {
+  display: flex; align-items: flex-start; gap: .75rem;
+  font-size: 13px; color: #b91c1c;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: 12px; padding: .75rem 1rem; margin-bottom: 1rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (min-width: 1024px) { .brand-panel { display: flex; } .mobile-logo { display: none; } }
+@media (max-width: 480px)  { .form-center { padding: 1rem 1.25rem 2rem; } }

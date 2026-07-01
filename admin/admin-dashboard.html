@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Admin Dashboard — ESPRESSGO</title>
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="../shared.css"/>
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="admin-dashboard.css"/>
+</head>
+
+<body>
+
+  <!-- Toast notification container -->
+  <div id="toast-container"></div>
+
+  <div class="admin-layout">
+
+    <!-- ── Sidebar navigation ───────────────────────────── -->
+    <aside
+      class="admin-sidebar"
+      role="navigation"
+      aria-label="Admin navigation">
+
+      <!-- Logo -->
+      <div class="sidebar-logo">
+
+        <div class="sidebar-logo-icon">
+          🛡
+        </div>
+
+        <div>
+          <div class="sidebar-logo-text">
+            ESPRESSGO
+          </div>
+
+          <div class="sidebar-logo-sub">
+            Admin Portal
+          </div>
+        </div>
+
+      </div>
+
+      <div>
+        <a href="../catalog.html" class="sidebar-link">
+          ← Back to Catalog
+        </a>
+      </div>
+      <!-- Nav links -->
+      <nav class="sidebar-nav">
+
+        <button
+          class="sidebar-link active"
+          data-panel="dashboard"
+          onclick="showPanel('dashboard', this)"
+          type="button">
+          📊 Dashboard
+        </button>
+
+        <button
+          class="sidebar-link"
+          data-panel="orders"
+          onclick="showPanel('orders', this)"
+          type="button">
+          📦 Order Fulfilment
+        </button>
+
+        <button
+          class="sidebar-link"
+          data-panel="users"
+          onclick="showPanel('users', this)"
+          type="button">
+          👥 User Approval
+        </button>
+
+        <button
+          class="sidebar-link"
+          data-panel="products"
+          onclick="showPanel('products', this)"
+          type="button">
+          ☕ Products
+        </button>
+
+        <button
+          class="sidebar-link"
+          data-panel="feedback"
+          onclick="showPanel('feedback', this)"
+          type="button">
+          ⭐ Feedback
+        </button>
+
+        <button
+          class="sidebar-link"
+          data-panel="subscriptions"
+          onclick="showPanel('subscriptions', this)"
+          type="button">
+          💰 Subscriptions
+        </button>
+
+        <button
+          class="sidebar-link"
+          data-panel="faqs"
+          onclick="showPanel('faqs', this)"
+          type="button">
+          ❓ FAQ Management
+        </button>
+
+      </nav>
+
+      <!-- Admin account footer -->
+      <div class="sidebar-footer">
+
+        <div
+          id="admin-email-label"
+          style="font-size:11px;color:#6B5744;margin-bottom:.5rem;">
+          Loading admin…
+        </div>
+
+        <button
+          class="sidebar-logout"
+          onclick="adminLogout()"
+          type="button">
+          🚪 Sign Out
+        </button>
+
+      </div>
+
+    </aside>
+
+    <!-- ── Main content area ────────────────────────────── -->
+    <div class="admin-main">
+
+      <!-- Loading state -->
+      <div
+        id="admin-loading"
+        class="card"
+        style="padding:2rem;text-align:center;color:var(--muted);">
+        Loading admin dashboard…
+      </div>
+
+      <!-- Dashboard content wrapper -->
+      <div
+        id="admin-content"
+        style="display:none;">
+
+        <!-- Dashboard panel -->
+        <div class="panel active" id="panel-dashboard">
+
+          <div class="admin-header">
+            <h1>Dashboard</h1>
+            <p id="dash-date"></p>
+          </div>
+
+          <!-- KPI stat cards -->
+          <div class="stat-row" id="stat-row"></div>
+
+          <!-- Recent orders table -->
+          <div class="card">
+
+            <div
+              style="padding:1rem 1.5rem;border-bottom:1px solid #F0EAE4;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+
+              <div>
+                <h2 style="font-size:1rem;color:var(--brown);">
+                  Recent Orders
+                </h2>
+
+                <p style="font-size:11px;color:var(--muted);margin-top:2px;">
+                  Latest submitted B2B orders
+                </p>
+              </div>
+
+              <button
+                class="btn-ghost btn-sm"
+                onclick="refreshAdminData()"
+                type="button">
+                ↻ Refresh
+              </button>
+
+            </div>
+
+            <div style="overflow-x:auto;">
+              <table class="data-table" id="dash-orders-table">
+
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Company</th>
+                    <th>Cartons</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+
+                <tbody id="dash-orders-body"></tbody>
+
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Orders fulfilment panel -->
+        <div class="panel" id="panel-orders">
+
+          <div class="admin-header">
+            <h1>Order Fulfilment</h1>
+            <p>Manage and update order statuses.</p>
+          </div>
+
+          <div class="card">
+
+            <div
+              style="padding:1rem 1.5rem;border-bottom:1px solid #F0EAE4;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;">
+
+              <div>
+                <h2 style="font-size:1rem;color:var(--brown);">
+                  Orders
+                </h2>
+
+                <p style="font-size:11px;color:var(--muted);margin-top:2px;">
+                  Advance orders from pending to delivered.
+                </p>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                <input 
+                  type="text" 
+                  id="orders-search" 
+                  placeholder="Search Order ID, Company, Contact..." 
+                  style="padding:0.4rem 0.75rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;width:220px;"
+                  oninput="filterOrdersTable()"/>
+                
+                <select 
+                  id="orders-filter-status" 
+                  style="padding:0.4rem 0.75rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;" 
+                  onchange="filterOrdersTable()">
+                  <option value="all">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                </select>
+
+                <button
+                  class="btn-ghost btn-sm"
+                  onclick="refreshAdminData()"
+                  type="button">
+                  ↻ Refresh
+                </button>
+              </div>
+
+            </div>
+
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Company</th>
+                    <th>Business Type</th>
+                    <th>Cartons</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+
+                <tbody id="orders-body"></tbody>
+
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- User approval panel -->
+        <div class="panel" id="panel-users">
+
+          <div class="admin-header">
+            <h1>User Approval</h1>
+            <p>Review and screen registered B2B buyer accounts.</p>
+          </div>
+
+          <div class="card">
+
+            <div
+              style="padding:1rem 1.5rem;border-bottom:1px solid #F0EAE4;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;">
+
+              <div>
+                <h2 style="font-size:1rem;color:var(--brown);">
+                  Buyer Accounts
+                </h2>
+
+                <p style="font-size:11px;color:var(--muted);margin-top:2px;">
+                  Profiles registered through the portal.
+                </p>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                <input 
+                  type="text" 
+                  id="users-search" 
+                  placeholder="Search Email, Company..." 
+                  style="padding:0.4rem 0.75rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;width:180px;"
+                  oninput="filterUsersTable()"/>
+
+                <select 
+                  id="users-filter-status" 
+                  style="padding:0.4rem 0.75rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;" 
+                  onchange="filterUsersTable()">
+                  <option value="all">All Approvals</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+
+                <button
+                  class="btn-ghost btn-sm"
+                  onclick="refreshAdminData()"
+                  type="button">
+                  ↻ Refresh
+                </button>
+              </div>
+
+            </div>
+
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Company</th>
+                    <th>Business Type</th>
+                    <th>Role</th>
+                    <th>Approval Status</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody id="users-body"></tbody>
+
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Products panel -->
+        <div class="panel" id="panel-products">
+
+          <div class="admin-header" style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+            <div>
+              <h1>Products</h1>
+              <p>Manage products, stock levels, volume pricing tiers, and visuals.</p>
+            </div>
+            <button class="btn-amber" onclick="openAddProductModal()" style="border-radius:10px; padding:0.5rem 1.25rem;">
+              ➕ Add Product
+            </button>
+          </div>
+
+          <div class="card">
+
+            <div
+              style="padding:1rem 1.5rem;border-bottom:1px solid #F0EAE4;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+
+              <div>
+                <h2 style="font-size:1rem;color:var(--brown);">
+                  Product Catalogue
+                </h2>
+
+                <p style="font-size:11px;color:var(--muted);margin-top:2px;">
+                  Active products visible to B2B buyers.
+                </p>
+              </div>
+
+              <button
+                class="btn-ghost btn-sm"
+                onclick="refreshAdminData()"
+                type="button">
+                ↻ Refresh
+              </button>
+
+            </div>
+
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Visual</th>
+                    <th>Name</th>
+                    <th>Stock (Cartons)</th>
+                    <th>Tier 1 (1-9)</th>
+                    <th>Tier 2 (10-29)</th>
+                    <th>Tier 3 (30+)</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody id="products-body"></tbody>
+
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Feedback panel -->
+        <div class="panel" id="panel-feedback">
+
+          <div class="admin-header">
+            <h1>Feedback</h1>
+            <p>Review customer messages, feedback, and wholesale enquiries.</p>
+          </div>
+
+          <div class="card">
+
+            <div
+              style="padding:1rem 1.5rem;border-bottom:1px solid #F0EAE4;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;">
+
+              <div>
+                <h2 style="font-size:1rem;color:var(--brown);">
+                  Contact Messages
+                </h2>
+
+                <p style="font-size:11px;color:var(--muted);margin-top:2px;">
+                  Submitted through the contact form.
+                </p>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                <input 
+                  type="text" 
+                  id="feedback-search" 
+                  placeholder="Search Name, Email, Msg..." 
+                  style="padding:0.4rem 0.75rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;width:180px;"
+                  oninput="filterFeedbackTable()"/>
+
+                <select 
+                  id="feedback-filter-topic" 
+                  style="padding:0.4rem 0.75rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;" 
+                  onchange="filterFeedbackTable()">
+                  <option value="all">All Topics</option>
+                  <option value="product">Product</option>
+                  <option value="delivery">Delivery</option>
+                  <option value="billing">Billing</option>
+                  <option value="subscription">Subscription</option>
+                  <option value="other">Other</option>
+                </select>
+
+                <select 
+                  id="feedback-filter-status" 
+                  style="padding:0.4rem 0.75rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;" 
+                  onchange="filterFeedbackTable()">
+                  <option value="all">All Statuses</option>
+                  <option value="new">New</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+
+                <button
+                  class="btn-ghost btn-sm"
+                  onclick="refreshAdminData()"
+                  type="button">
+                  ↻ Refresh
+                </button>
+              </div>
+
+            </div>
+
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Topic</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody id="feedback-body"></tbody>
+
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="panel" id="panel-subscriptions">
+
+          <div class="admin-header">
+            <h1>Subscriptions</h1>
+            <p>Manage recurring coffee subscriptions.</p>
+          </div>
+
+          <div class="card">
+
+            <div
+              style="padding:1rem 1.5rem;border-bottom:1px solid #F0EAE4;">
+
+              <h2 style="font-size:1rem;color:var(--brown);">
+                Active Subscriptions
+              </h2>
+
+            </div>
+
+            <div
+              id="adminSubscriptions"
+              style="padding:1.5rem;">
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- FAQ Management Panel -->
+        <div class="panel" id="panel-faqs">
+
+          <div class="admin-header">
+            <h1>FAQ Management</h1>
+            <p>Manage categories and B2B FAQ questions/answers for KOPIGO AI mascot.</p>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; align-items: start;">
+            
+            <!-- FAQ Categories Card -->
+            <div class="card">
+              <div style="padding:1rem 1.5rem; border-bottom:1px solid #F0EAE4; display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+                <h2 style="font-size:1rem; color:var(--brown); margin:0;">Categories</h2>
+                <button class="btn-ghost btn-sm" onclick="openAddCategoryModal()">➕ Add</button>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th style="text-align:right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="faq-categories-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- FAQs Q&A Card -->
+            <div class="card">
+              <div style="padding:1rem 1.5rem; border-bottom:1px solid #F0EAE4; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem;">
+                <h2 style="font-size:1rem; color:var(--brown); margin:0;">Questions & Answers</h2>
+                <button class="btn-amber btn-sm" onclick="openAddFaqModal()">➕ Add FAQ</button>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Question</th>
+                      <th>Answer</th>
+                      <th>Status</th>
+                      <th style="text-align:right;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="faqs-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Order Details Modal -->
+  <div id="order-details-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 style="margin:0;font-size:1.2rem;color:var(--brown);" id="details-modal-title">Order Details</h2>
+        <button class="btn-ghost" onclick="closeOrderDetailsModal()" style="font-size:1.5rem;padding:0;line-height:1;border:none;background:none;cursor:pointer;">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;font-size:13px;line-height:1.4;">
+          <div>
+            <strong>Company:</strong> <span id="details-company"></span><br>
+            <strong>Contact:</strong> <span id="details-contact"></span><br>
+            <strong>Business Type:</strong> <span id="details-biz-type"></span>
+          </div>
+          <div>
+            <strong>Delivery Address:</strong> <span id="details-address"></span><br>
+            <strong>Status:</strong> <span id="details-status"></span><br>
+            <strong>Date:</strong> <span id="details-date"></span>
+          </div>
+        </div>
+        <div style="margin-bottom:1.5rem;">
+          <h3 style="font-size:14px;color:var(--brown);margin-bottom:0.5rem;border-bottom:1px solid #F0EAE4;padding-bottom:0.25rem;">Items</h3>
+          <div style="max-height: 200px; overflow-y: auto;">
+            <table class="data-table" style="font-size:12px;margin-bottom:0;">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>SKU</th>
+                  <th style="text-align:center;">Qty (Cartons)</th>
+                  <th style="text-align:right;">Unit Price</th>
+                  <th style="text-align:right;">Total</th>
+                </tr>
+              </thead>
+              <tbody id="details-items-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div style="font-size:13px;margin-bottom:1rem;" id="details-notes-section">
+          <strong>Notes:</strong> <span id="details-notes" style="color:var(--muted);"></span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:1rem;border-top:1px solid #F0EAE4;padding-top:1rem;">
+          <div style="font-size:16px;font-weight:600;color:var(--brown);align-self:center;">
+            Total: <span id="details-total-price"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Edit Modal -->
+  <div id="product-edit-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 style="margin:0;font-size:1.2rem;color:var(--brown);" id="product-modal-title">Edit Product</h2>
+        <button class="btn-ghost" onclick="closeProductModal()" style="font-size:1.5rem;padding:0;line-height:1;border:none;background:none;cursor:pointer;">&times;</button>
+      </div>
+      <form id="product-form" onsubmit="saveProductForm(event)" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
+        <input type="hidden" id="edit-product-id">
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Product ID</label>
+            <input type="text" id="prod-id" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">SKU</label>
+            <input type="text" id="prod-sku" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Name</label>
+          <input type="text" id="prod-name" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+        </div>
+
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Subtitle</label>
+          <input type="text" id="prod-subtitle" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Caffeine</label>
+            <input type="text" id="prod-caffeine" placeholder="~60mg caffeine" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Format</label>
+            <input type="text" id="prod-format" placeholder="Gel pouch · 25ml" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Shelf Life</label>
+            <input type="text" id="prod-shelflife" placeholder="12-month shelf life" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Stock (Cartons)</label>
+            <input type="number" id="prod-stock" min="0" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Status</label>
+            <select id="prod-active" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;height:32px;">
+              <option value="true">Active (In Catalog)</option>
+              <option value="false">Coming Soon (Inactive)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Coming Soon Hint (If Inactive)</label>
+          <input type="text" id="prod-hint" placeholder="Matcha + espresso blend — Q3 2026" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+        </div>
+
+        <!-- Custom Image vs Dynamic SVG Pouch -->
+        <div style="border-top:1px solid #F0EAE4;padding-top:1rem;">
+          <h3 style="font-size:13px;color:var(--brown);margin-bottom:0.75rem;">Product Visual Asset</h3>
+          
+          <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1rem;">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Custom Image URL (Overrides SVG Pouch)</label>
+              <input type="text" id="prod-imageurl" placeholder="https://..." style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;margin-bottom:0.5rem;">
+              
+              <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Or Upload Image</label>
+              <input type="file" id="prod-image-file" accept="image/*" onchange="handleProductImageUpload(event)" style="font-size:12px;">
+            </div>
+            
+            <div style="display:flex;flex-direction:column;gap:0.35rem;">
+              <label style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;">Dynamic Pouch Customizer</label>
+              <div style="display:flex;align-items:center;gap:0.5rem;font-size:12px;">
+                <input type="color" id="prod-color-pouch" value="#C8580A" style="width:28px;height:24px;border:none;padding:0;cursor:pointer;"> Pouch
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;font-size:12px;">
+                <input type="color" id="prod-color-accent" value="#8B3A00" style="width:28px;height:24px;border:none;padding:0;cursor:pointer;"> Accent
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;font-size:12px;">
+                <input type="color" id="prod-color-label" value="#F5E0C8" style="width:28px;height:24px;border:none;padding:0;cursor:pointer;"> Label
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;border-top:1px solid #F0EAE4;padding-top:1rem;margin-top:0.5rem;">
+          <button type="button" class="btn-ghost" onclick="closeProductModal()" style="border:1px solid #EDE8E3;border-radius:8px;padding:0.4rem 1rem;font-size:13px;">Cancel</button>
+          <button type="submit" class="btn-amber" style="border-radius:8px;padding:0.4rem 1.25rem;font-size:13px;">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Product Pricing Tiers Modal -->
+  <div id="product-tiers-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 style="margin:0;font-size:1.2rem;color:var(--brown);">Volume Tier Pricing</h2>
+        <button class="btn-ghost" onclick="closeProductTiersModal()" style="font-size:1.5rem;padding:0;line-height:1;border:none;background:none;cursor:pointer;">&times;</button>
+      </div>
+      <div style="padding:1.5rem;">
+        <h3 id="tiers-modal-product-name" style="font-size:14px;color:var(--brown);margin-top:0;margin-bottom:0.25rem;">Product Name</h3>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:1.25rem;">Configure wholesale bulk price breaks (prices in SGD).</p>
+        
+        <input type="hidden" id="tiers-product-id">
+
+        <div style="margin-bottom:1rem;">
+          <table class="data-table" style="font-size:12px;margin-bottom:1rem;">
+            <thead>
+              <tr>
+                <th style="width:70px;text-align:center;">Min Qty</th>
+                <th style="width:70px;text-align:center;">Max Qty</th>
+                <th style="text-align:right;">Price</th>
+                <th style="width:60px;text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="tiers-body-editor"></tbody>
+          </table>
+          
+          <button type="button" class="btn-ghost btn-sm" onclick="addNewTierRow()" style="border:1px dashed #C8853A;width:100%;text-align:center;padding:0.5rem;border-radius:8px;color:#C8853A;cursor:pointer;">
+            ➕ Add Pricing Tier
+          </button>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;border-top:1px solid #F0EAE4;padding-top:1rem;">
+          <button type="button" class="btn-ghost" onclick="closeProductTiersModal()" style="border:1px solid #EDE8E3;border-radius:8px;padding:0.4rem 1rem;font-size:13px;">Cancel</button>
+          <button type="button" class="btn-amber" onclick="saveProductTiers()" style="border-radius:8px;padding:0.4rem 1.25rem;font-size:13px;">Save Pricing Tiers</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ Category Modal -->
+  <div id="faq-category-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 style="margin:0;font-size:1.1rem;color:var(--brown);" id="faq-category-modal-title">Add Category</h2>
+        <button class="btn-ghost" onclick="closeCategoryModal()" style="font-size:1.5rem;padding:0;line-height:1;border:none;background:none;cursor:pointer;">&times;</button>
+      </div>
+      <form id="faq-category-form" onsubmit="saveCategoryForm(event)" style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
+        <input type="hidden" id="edit-category-id">
+        
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Category Name</label>
+          <input type="text" id="cat-name" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+        </div>
+
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Display Order</label>
+          <input type="number" id="cat-order" value="0" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;border-top:1px solid #F0EAE4;padding-top:1rem;margin-top:0.5rem;">
+          <button type="button" class="btn-ghost" onclick="closeCategoryModal()" style="border:1px solid #EDE8E3;border-radius:8px;padding:0.4rem 1rem;font-size:13px;">Cancel</button>
+          <button type="submit" class="btn-amber" style="border-radius:8px;padding:0.4rem 1.25rem;font-size:13px;">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FAQ Modal -->
+  <div id="faq-item-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 style="margin:0;font-size:1.1rem;color:var(--brown);" id="faq-item-modal-title">Add FAQ</h2>
+        <button class="btn-ghost" onclick="closeFaqModal()" style="font-size:1.5rem;padding:0;line-height:1;border:none;background:none;cursor:pointer;">&times;</button>
+      </div>
+      <form id="faq-item-form" onsubmit="saveFaqForm(event)" style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem;">
+        <input type="hidden" id="edit-faq-id">
+        
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Category</label>
+          <select id="faq-cat-id" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;height:32px;">
+            <!-- Categories options populated dynamically -->
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Question</label>
+          <input type="text" id="faq-question" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+        </div>
+
+        <div>
+          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Answer (Supports Markdown Bold **text**)</label>
+          <textarea id="faq-answer" required rows="4" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;font-family:inherit;"></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Display Order</label>
+            <input type="number" id="faq-order" value="0" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Status</label>
+            <select id="faq-active" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;height:32px;">
+              <option value="true">Active (Visible)</option>
+              <option value="false">Inactive (Hidden)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;border-top:1px solid #F0EAE4;padding-top:1rem;margin-top:0.5rem;">
+          <button type="button" class="btn-ghost" onclick="closeFaqModal()" style="border:1px solid #EDE8E3;border-radius:8px;padding:0.4rem 1rem;font-size:13px;">Cancel</button>
+          <button type="submit" class="btn-amber" style="border-radius:8px;padding:0.4rem 1.25rem;font-size:13px;">Save FAQ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  </div>
+
+  <!-- Supabase client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Your Supabase project URL/key -->
+  <script src="../supabase-config.js"></script>
+
+  <!-- Shared utilities: Orders, Products, Auth, showToast -->
+  <script src="../shared.js"></script>
+
+  <!-- Page logic: admin auth guard, panel switching, render functions -->
+  <script src="admin-dashboard.js"></script>
+
+</body>
+</html>

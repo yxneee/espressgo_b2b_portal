@@ -1,0 +1,86 @@
+/* ============================================================
+   quick-order.css — Styles for quick-order.html
+   Depends on: shared.css (must be loaded first)
+   ============================================================ */
+
+
+/* ── Page layout: product list left, summary sidebar right ── */
+.qo-layout { display: flex; flex-direction: column; gap: 1.5rem; }
+/* On large screens, show side by side */
+@media (min-width: 1200px) { .qo-layout { flex-direction: row; } }
+
+
+/* ── Product row card ────────────────────────────────────── */
+.product-row-card {
+  background: #fff;
+  border: 1px solid #E8DDD0;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
+  overflow: hidden;
+}
+.product-row-top  { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.25rem .75rem; }
+.product-row-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.product-row-body { padding: 0 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+
+
+/* ── Volume tier progress bar ────────────────────────────── */
+/* Shows how close the buyer is to the next pricing tier */
+.tier-strip-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-bottom: .35rem; }
+.tier-strip-bar    { height: 6px; background: #F0EAE4; border-radius: 9999px; overflow: hidden; }
+.tier-strip-fill   { height: 100%; background: var(--amber); border-radius: 9999px; transition: width .4s ease; }
+.tier-strip-hint   { font-size: 10px; color: #15803d; margin-top: .35rem; }
+
+
+/* ── Quantity stepper (reused from catalog, kept separate for clarity) */
+.stepper     { display: flex; align-items: center; background: #F5F0EA; border: 1px solid #E0D5C8; border-radius: 10px; overflow: hidden; }
+.stepper-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; color: var(--brown); font-size: 16px; transition: background .15s; }
+.stepper-btn:hover    { background: #EDE8E1; }
+.stepper-btn:disabled { opacity: .3; cursor: not-allowed; }
+.stepper-input { width: 64px; text-align: center; background: transparent; border: none; border-left: 1px solid #E0D5C8; border-right: 1px solid #E0D5C8; padding: .5rem; color: var(--brown); font-size: 14px; outline: none; }
+
+/* Subtotal pill shown when qty > 0 */
+.subtotal-pill { display: flex; flex-direction: column; background: #FEF3E2; border: 1px solid #F5D9B0; border-radius: 10px; padding: .5rem .85rem; }
+
+
+/* ── Coming soon dimmed rows ─────────────────────────────── */
+.coming-row       { background: #fff; border: 1px solid #E8DDD0; border-radius: 16px; padding: 1rem 1.25rem; opacity: .5; }
+.coming-row-inner { display: flex; align-items: center; gap: 1rem; }
+.coming-tag       { font-size: 10px; background: #F5F0EB; color: var(--muted); border: 1px solid #E8DDD0; padding: .15rem .5rem; border-radius: 9999px; }
+
+
+/* ── Order summary sidebar ───────────────────────────────── */
+.summary-card {
+  background: #fff;
+  border: 1px solid #E8DDD0;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .04);
+  overflow: hidden;
+}
+/* Sticky on desktop — stays visible while scrolling the product list */
+@media (min-width: 1200px) {
+  .summary-card { width: 320px; flex-shrink: 0; position: sticky; top: 80px; align-self: flex-start; }
+}
+
+.summary-header { background: var(--brown); padding: 1.25rem; position: relative; overflow: hidden; }
+/* Decorative circle in the header background */
+.summary-header::before { content: ''; position: absolute; top: -1rem; right: -1rem; width: 5rem; height: 5rem; border-radius: 50%; background: rgba(255, 255, 255, .05); }
+.summary-body { padding: 1.25rem; }
+
+/* Each product line in the summary */
+.summary-line { display: flex; align-items: center; gap: .6rem; font-size: 12px; }
+.summary-dot  { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; }
+
+/* Totals section (cartons, pouches, grand total) */
+.summary-totals   { border-top: 1px solid #F0EAE4; padding-top: .75rem; margin-top: .75rem; display: flex; flex-direction: column; gap: .35rem; }
+.summary-total-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--brown-lt); }
+
+/* Green savings row shown when volume discount applies */
+.savings-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: .4rem .75rem; }
+
+/* Placeholder shown when no product quantities are entered */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; text-align: center; }
+
+
+/* ── Success state (shown after placing order) ────────────── */
+.success-full { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; }
+.success-icon-big { width: 64px; height: 64px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 1.25rem; }
