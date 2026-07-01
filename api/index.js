@@ -11,29 +11,31 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// DEBUG LOGGER: This will show up in your Vercel logs
+// This middleware logs every request so you can see it in Vercel Logs
 app.use((req, res, next) => {
-  console.log(`LOG: ${req.method} request to ${req.url}`);
+  console.log(`Incoming: ${req.method} ${req.url}`);
   next();
 });
 
-// 1. STRIPE WEBHOOK (Needs raw body)
+// STRIPE WEBHOOK (Needs raw body)
 app.use(['/api/webhook', '/webhook'], express.raw({ type: 'application/json' }));
 
-// 2. MIDDLEWARE
 app.use(cors());
 app.use(express.json());
 
-// 3. DIAGNOSTIC ROUTE
-app.get(['/api', '/api/index.js'], (req, res) => res.send('API is Online'));
+// HEALTH CHECK
+app.get('*', (req, res, next) => {
+    if (req.url === '/api' || req.url === '/') return res.send('API is Online');
+    next();
+});
 
-// 4. THE MAIN CHECKOUT ROUTE (Handling multiple path possibilities)
-app.post(['/api/create-checkout-session', '/create-checkout-session', '/api/index.js', '/api/index'], async (req, res) => {
+// THE MAIN CHECKOUT ROUTE
+// We use a wildcard (*) or match the specific paths. 
+// This ensures that even if Vercel sends '/api/index.js', it matches.
+app.post(['/api/create-checkout-session', '/create-checkout-session', '/api/index.js', '*'], async (req, res) => {
   const { cart, profile } = req.body;
   
-  if (!cart || !Array.isArray(cart)) {
-    return res.status(400).json({ error: "Cart is invalid" });
-  }
+  if (!cart) return res.status(400).json({ error: "No cart provided" });
 
   try {
     const productIds = cart.map(i => i.product_id);
@@ -75,7 +77,7 @@ app.post(['/api/create-checkout-session', '/create-checkout-session', '/api/inde
 
     res.json({ url: session.url });
   } catch (err) {
-    console.error("CRASH ERROR:", err.message);
+    console.error("BACKEND ERROR:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
