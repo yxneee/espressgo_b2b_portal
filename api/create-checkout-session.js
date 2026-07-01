@@ -32,7 +32,7 @@ app.get('*', (req, res, next) => {
 // THE MAIN CHECKOUT ROUTE
 // We use a wildcard (*) or match the specific paths. 
 // This ensures that even if Vercel sends '/api/index.js', it matches.
-app.post(['/api/create-checkout-session', '/create-checkout-session', '/api/index.js', '*'], async (req, res) => {
+app.post(['/', '/api/create-checkout-session'], async (req, res) => {
   const { cart, profile } = req.body;
   
   if (!cart) return res.status(400).json({ error: "No cart provided" });
