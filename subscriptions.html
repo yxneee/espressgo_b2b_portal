@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscriptions — ESPRESSGO B2B Wholesale Portal</title>
+
+    <!-- Shared design system -->
+    <link rel="stylesheet" href="shared.css" />
+
+    <!-- Page-specific styles -->
+    <link rel="stylesheet" href="css/subscriptions.css" />
+</head>
+<body>
+    <main class="page-wrap">
+
+        <div class="hero">
+            <div class="hero-inner">
+            <div class="hero-badge">
+                Subscription Setup
+            </div>
+
+            <h1>Create Recurring Order</h1>
+
+            <p>
+                Your current cart has been imported.
+            </p>
+            </div>
+        </div>
+
+        <div class="subscription-card">
+
+            <h2>Products</h2>
+
+            <div id="subscription-items"></div>
+
+            <div class="form-group">
+            <label for="frequency">
+                Delivery Frequency
+            </label>
+
+            <select id="frequency" disabled>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+            </select>
+            </div>
+
+            <div id="subscription-total"></div>
+
+            <button
+            id="create-subscription-btn"
+            class="btn-dark"
+            >
+            Create Subscription
+            </button>
+
+        </div>
+
+    </main>
+
+    <!-- Footer injected by buildFooter() -->
+    <div id="footer-placeholder"></div>
+
+
+
+    <!-- Supabase client library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Your Supabase project URL/key -->
+    <script src="supabase-config.js"></script>
+
+    <!-- Shared utilities -->
+    <script src="shared.js"></script>
+
+    <!-- Page logic: cart management, modal, order submission -->
+    <script src="js/subscriptions.js"></script>
+    </body>
+</html>

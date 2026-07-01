@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Quick Order — ESPRESSGO B2B Wholesale Portal</title>
+
+  <meta
+    name="description"
+    content="Quickly place bulk orders for ESPRESSGO gel shots. Enter quantities and get real-time volume pricing."/>
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="shared.css"/>
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="css/quick-order.css"/>
+</head>
+
+<body>
+
+  <!-- Navigation injected by buildNav() -->
+  <div id="nav-placeholder"></div>
+
+  <main class="page-wrap" id="main-content">
+
+    <!-- ── Success state ────────────────────────────────── -->
+    <!-- Hidden by default; shown after placing an order -->
+    <div
+      class="success-full fade-in"
+      id="success-state"
+      style="display:none;"
+      role="status"
+      aria-live="polite">
+
+      <div class="success-icon-big">
+        ✅
+      </div>
+
+      <h2 style="color:var(--brown);margin-bottom:.5rem;">
+        Order Submitted
+      </h2>
+
+      <p
+        id="success-summary"
+        style="font-size:13px;color:var(--brown-lt);margin-bottom:.25rem;">
+      </p>
+
+      <p style="font-size:12px;color:var(--muted);">
+        Your account manager will confirm shortly.
+      </p>
+
+    </div>
+
+    <!-- ── Main ordering UI ─────────────────────────────── -->
+    <div id="qo-main">
+
+      <!-- Hero -->
+      <div class="hero" aria-labelledby="qo-heading">
+        <div class="hero-inner">
+
+          <div class="hero-badge">
+            ⚡ Quick Order
+          </div>
+
+          <h1 id="qo-heading">
+            Place your order fast.
+          </h1>
+
+          <p>
+            Enter quantities — tier discounts apply in real time as you type.
+          </p>
+
+          <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;">
+            <span class="chip">🕑 Before 2 PM ships same day</span>
+            <span class="chip">📉 Volume discounts auto-apply</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Side-by-side layout: product list + summary sidebar -->
+      <div class="qo-layout">
+
+        <!-- Product rows — populated by renderProductRows() -->
+        <div
+          style="flex:1;display:flex;flex-direction:column;gap:1rem;"
+          id="product-rows"
+          role="list"
+          aria-label="Products">
+        </div>
+
+        <!-- Order summary sidebar — updated by renderSummary() -->
+        <div
+          class="summary-card"
+          role="region"
+          aria-label="Order summary"
+          aria-live="polite">
+
+          <div class="summary-header">
+            <div style="position:relative;z-index:1;">
+
+              <div
+                style="font-size:10px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.25rem;">
+                Order Summary
+              </div>
+
+              <div style="color:var(--cream);font-size:14px;">
+                ESPRESSGO B2B
+              </div>
+
+            </div>
+          </div>
+
+          <div class="summary-body">
+
+            <!-- Per-product summary lines -->
+            <div
+              id="summary-lines"
+              style="display:flex;flex-direction:column;gap:.6rem;">
+            </div>
+
+            <!-- Totals section -->
+            <div
+              id="summary-totals"
+              class="summary-totals"
+              style="display:none;">
+            </div>
+
+            <!-- Empty state placeholder -->
+            <div id="empty-summary" class="empty-state">
+
+              <div style="font-size:2rem;margin-bottom:.5rem;opacity:.4;">
+                📦
+              </div>
+
+              <p style="font-size:13px;color:var(--muted-lt);">
+                Enter quantities to build your order.
+              </p>
+
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:1rem;">
+
+              <button
+                id="place-order-btn"
+                class="btn-dark btn-full"
+                type="button"
+                disabled>
+                Place Order →
+              </button>
+
+              <button
+                id="clear-all-btn"
+                class="btn-ghost btn-full"
+                type="button"
+                disabled>
+                Clear All
+              </button>
+
+            </div>
+
+            <p style="font-size:10px;color:var(--muted-lt);text-align:center;margin-top:.75rem;">
+              Your account manager will confirm and arrange shipping.
+            </p>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer injected by buildFooter() -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Supabase client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Your Supabase project URL/key -->
+  <script src="supabase-config.js"></script>
+
+  <!-- Shared utilities -->
+  <script src="shared.js"></script>
+
+  <!-- Page logic: quantity management, tier bar, order submission -->
+  <script src="js/quick-order.js"></script>
+
+</body>
+</html>

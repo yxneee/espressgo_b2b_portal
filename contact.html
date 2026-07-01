@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Contact — ESPRESSGO B2B Wholesale Portal</title>
+
+  <meta
+    name="description"
+    content="Contact ESPRESSGO for wholesale enquiries, partnerships, or feedback. We reply within 1 business day."/>
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="shared.css"/>
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="css/contact.css"/>
+</head>
+
+<body>
+
+  <!-- Navigation injected by buildNav() -->
+  <div id="nav-placeholder"></div>
+
+  <main class="page-wrap" id="main-content">
+
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <div class="hero" aria-labelledby="contact-heading">
+      <div class="hero-inner">
+
+        <div class="hero-badge">
+          ✉️ Get in touch
+        </div>
+
+        <h1 id="contact-heading">
+          Let's talk coffee.
+        </h1>
+
+        <p>
+          Wholesale, partnerships, or just curious — we reply within 1 business day.
+        </p>
+
+      </div>
+    </div>
+
+    <!-- ── Contact info tiles ────────────────────────────── -->
+    <div
+      class="contact-tiles"
+      role="region"
+      aria-label="Contact information">
+
+      <!-- Click to copy email address -->
+      <button
+        class="contact-tile clickable"
+        id="copy-email-btn"
+        aria-label="Copy email address"
+        type="button">
+
+        <div
+          class="tile-icon"
+          style="background:#FEF3E2;">
+          📧
+        </div>
+
+        <div style="flex:1;min-width:0;">
+
+          <div class="tile-label">
+            Email us
+          </div>
+
+          <div
+            class="tile-value"
+            style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            hello@espressgo.sg
+          </div>
+
+        </div>
+
+        <span
+          id="copy-icon"
+          style="font-size:16px;color:var(--muted-lt);">
+          📋
+        </span>
+
+      </button>
+
+      <!-- Phone tile -->
+      <a
+        href="tel:+6587977961"
+        class="contact-tile clickable"
+        aria-label="Call Damien on +65 8797 7961"
+        style="text-decoration:none;">
+
+        <div
+          class="tile-icon"
+          style="background:#EFF6FF;">
+          📞
+        </div>
+
+        <div style="flex:1;min-width:0;">
+
+          <div class="tile-label">
+            Call us
+          </div>
+
+          <div
+            class="tile-value"
+            style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            +65 8797 7961
+          </div>
+
+          <div class="tile-sub">
+            Damien · Mon–Fri 9am–6pm SGT
+          </div>
+
+        </div>
+
+        <span style="font-size:16px;color:var(--muted-lt);">
+          ↗
+        </span>
+
+      </a>
+
+      <!-- Location info tile -->
+      <div class="contact-tile">
+
+        <div
+          class="tile-icon"
+          style="background:#f0fdf4;">
+          📍
+        </div>
+
+        <div>
+
+          <div class="tile-label">
+            Based in
+          </div>
+
+          <div class="tile-value">
+            Singapore
+          </div>
+
+          <div class="tile-sub">
+            @espressgo on LinkedIn &amp; Instagram
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ── Contact form card ─────────────────────────────── -->
+    <div
+      class="form-card"
+      role="region"
+      aria-label="Contact form">
+
+      <!-- Success screen -->
+      <div
+        class="success-state"
+        id="success-state"
+        style="display:none;"
+        aria-live="polite">
+
+        <div class="success-icon">
+          ✅
+        </div>
+
+        <h3 style="color:var(--brown);margin-bottom:.25rem;">
+          Message sent!
+        </h3>
+
+        <p
+          class="text-sm text-muted"
+          style="max-width:22rem;margin-bottom:1.5rem;">
+
+          We'll reply to
+          <span
+            id="success-email"
+            style="color:var(--brown);">
+          </span>
+          within one business day.
+        </p>
+
+        <button
+          class="btn-ghost btn-sm"
+          id="send-another-btn"
+          type="button">
+          Send another message
+        </button>
+
+      </div>
+
+      <!-- Form state -->
+      <div id="form-state">
+
+        <!-- Topic selector tabs -->
+        <div
+          class="topic-tabs"
+          role="tablist"
+          aria-label="Message topic">
+
+          <button
+            class="topic-tab active"
+            data-topic="wholesale"
+            role="tab"
+            aria-selected="true"
+            type="button">
+            🤝 Wholesale Enquiry
+          </button>
+
+          <button
+            class="topic-tab"
+            data-topic="feedback"
+            role="tab"
+            aria-selected="false"
+            type="button">
+            ⭐ Feedback
+          </button>
+
+          <button
+            class="topic-tab"
+            data-topic="partnership"
+            role="tab"
+            aria-selected="false"
+            type="button">
+            💬 Partnership
+          </button>
+
+          <button
+            class="topic-tab"
+            data-topic="other"
+            role="tab"
+            aria-selected="false"
+            type="button">
+            ❓ Other
+          </button>
+
+        </div>
+
+        <form
+          class="form-inner"
+          id="contact-form"
+          novalidate
+          aria-label="Contact form">
+
+          <!-- Name + Email row -->
+          <div class="form-row">
+
+            <div class="field">
+
+              <label for="c-name">
+                Name
+              </label>
+
+              <input
+                class="input"
+                id="c-name"
+                type="text"
+                placeholder="James Lim"
+                required
+                autocomplete="name"/>
+
+              <div
+                class="err-msg"
+                id="err-name"
+                role="alert"
+                style="display:none;">
+                ⚠ Required
+              </div>
+
+            </div>
+
+            <div class="field">
+
+              <label for="c-email">
+                Email
+              </label>
+
+              <input
+                class="input"
+                id="c-email"
+                type="email"
+                placeholder="you@company.com"
+                required
+                autocomplete="email"/>
+
+              <div
+                class="err-msg"
+                id="err-email"
+                role="alert"
+                style="display:none;">
+                ⚠ Required
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Message textarea with live character count -->
+          <div class="field">
+
+            <div
+              style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.375rem;">
+
+              <label
+                for="c-message"
+                style="margin-bottom:0;">
+                Message
+              </label>
+
+              <span
+                class="char-count"
+                id="char-count"
+                aria-live="polite">
+                0/500
+              </span>
+
+            </div>
+
+            <textarea
+              class="input"
+              id="c-message"
+              rows="4"
+              maxlength="500"
+              style="resize:none;"
+              placeholder="Tell us your order volume, frequency, and delivery needs…"></textarea>
+
+            <div
+              class="err-msg"
+              id="err-message"
+              role="alert"
+              style="display:none;">
+              ⚠ Required
+            </div>
+
+          </div>
+
+          <div style="display:flex;align-items:center;gap:1rem;">
+
+            <button
+              type="submit"
+              class="btn-dark btn-full"
+              id="submit-btn"
+              style="flex:1;">
+
+              <span id="submit-label">
+                📨 Send Message
+              </span>
+
+              <span
+                id="submit-spinner"
+                class="spinner"
+                style="display:none;"
+                aria-label="Sending...">
+              </span>
+
+            </button>
+
+            <a
+              href="login.html"
+              style="flex-shrink:0;font-size:12px;color:var(--muted);white-space:nowrap;">
+              Buyer portal →
+            </a>
+
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer injected by buildFooter() -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Supabase client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Your Supabase project URL/key -->
+  <script src="supabase-config.js"></script>
+
+  <!-- Shared utilities -->
+  <script src="shared.js"></script>
+
+  <!-- Page logic: copy email, topic tabs, char counter, form submit -->
+  <script src="js/contact.js"></script>
+
+</body>
+</html>

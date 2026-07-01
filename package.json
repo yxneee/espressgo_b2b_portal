@@ -1,0 +1,31 @@
+{
+  "dependencies": {
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "playwright": "^1.60.0",
+    "stripe": "^22.3.0"
+  },
+  "name": "espresgo_b2b_portal",
+  "version": "1.0.0",
+  "description": "https://espresgo-b2-b-portal.vercel.app/quick-order",
+  "main": "playwright_agent.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/changxiuchen/Espresgo_B2B_Portal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/changxiuchen/Espresgo_B2B_Portal/issues"
+  },
+  "homepage": "https://github.com/changxiuchen/Espresgo_B2B_Portal#readme"
+}

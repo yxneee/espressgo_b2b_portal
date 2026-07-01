@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Complete Your Profile — ESPRESSGO B2B Wholesale Portal</title>
+    <meta name="description" content="Complete your business profile verification metrics." />
+
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="css/login.css" />
+</head>
+
+<body>
+    <div class="login-wrap" style="justify-content: center; align-items: center;">
+
+        <div class="form-panel"
+            style="width: 100%; max-width: 460px; padding: 0; background: var(--cream-dk, #fdfbf7); border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow: hidden;">
+
+            <div style="background: var(--brown, #2b1b17); padding: 2.5rem 2rem 2rem 2rem; text-align: center;">
+                <div class="brand-logo" style="justify-content: center; margin-bottom: 1rem;">
+                    <div class="brand-logo-icon">E</div>
+                    <div style="text-align: left;">
+                        <div style="color:var(--cream); letter-spacing:.2em; font-size:13px; font-weight:700;">
+                            ESPRESSGO
+                        </div>
+                        <div
+                            style="color:var(--brown-lt); font-size:10px; letter-spacing:.12em; text-transform:uppercase; margin-top:2px;">
+                            B2B Wholesale Portal
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 2rem;">
+
+                <div style="margin-bottom: 2rem; text-align: center;">
+                    <h1 style="font-size: 1.5rem; color: var(--brown); margin-bottom: .35rem; font-weight: 700;">Almost
+                        There!</h1>
+                    <p style="font-size: 13px; color: var(--muted);">Please supply your wholesale authorization metrics
+                        to
+                        access bulk trading features.</p>
+                </div>
+
+                <div class="server-err" id="server-err" role="alert" style="display:none; margin-bottom: 1.25rem;">
+                    <span>⚠️</span>
+                    <span id="server-err-text"></span>
+                </div>
+
+                <form id="complete-profile-form" novalidate>
+
+                    <div class="field">
+                        <label for="f-contactName">Contact Name</label>
+                        <input class="input" id="f-contactName" type="text" placeholder="Jane Tan" required
+                            autocomplete="name" />
+                        <div class="err-msg" id="err-contactName" role="alert" style="display:none;"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-companyName">Company Name</label>
+                        <input class="input" id="f-companyName" type="text" placeholder="Acme Coffee Co." required
+                            autocomplete="organization" />
+                        <div class="err-msg" id="err-companyName" role="alert" style="display:none;"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-businessType">Business Type</label>
+                        <select class="input" id="f-businessType" required>
+                            <option value="">Select type…</option>
+                            <option>Office Manager</option>
+                            <option>Gym Operator</option>
+                            <option>Event Organiser</option>
+                            <option>Café Distributor</option>
+                            <option>Convenience Store</option>
+                            <option>Other</option>
+                        </select>
+                        <div class="err-msg" id="err-businessType" role="alert" style="display:none;"></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-address">Business Address</label>
+                        <input class="input" id="f-address" type="text" placeholder="123 Robinson Road, #04-01" required
+                            autocomplete="street-address" />
+                        <div class="err-msg" id="err-address" role="alert" style="display:none;"></div>
+                    </div>
+
+                    <button type="submit" class="btn-dark btn-full" id="submit-btn"
+                        style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <span id="btn-text">Save and Open Catalog</span>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="shared.js"></script>
+    <script src="js/complete-profile.js"></script>
+</body>
+
+</html>

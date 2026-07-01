@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — ESPRESSGO B2B Wholesale Portal</title>
+  <meta name="description"
+    content="ESPRESSGO is a gel-based espresso shot in a single-use squeeze pouch — made in Singapore, shipped wholesale to offices, gyms, events and retail." />
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="shared.css" />
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="css/about.css" />
+</head>
+
+<body>
+
+  <!-- Navigation injected by buildNav() -->
+  <div id="nav-placeholder"></div>
+
+  <main class="page-wrap" id="main-content">
+
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <div class="hero" aria-labelledby="about-heading">
+      <div class="hero-inner">
+        <div class="hero-badge">🌿 About ESPRESSGO</div>
+        <h1 id="about-heading">Coffee in a pouch.<br>No prep. No fridge.</h1>
+        <p>A gel-based espresso shot in a single-use squeeze pouch — made in Singapore, shipped wholesale.</p>
+        <a href="contact.html" class="btn-amber">Enquire wholesale →</a>
+      </div>
+    </div>
+
+    <!-- ── Product statistics ─────────────────────────────── -->
+    <!-- Numbers animate in via IntersectionObserver in about.js -->
+    <div class="stats-grid" role="region" aria-label="Product statistics">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-1">1</div>
+        <div class="stat-label">Espresso shot</div>
+        <div class="stat-sub">per pouch</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-12">12mo</div>
+        <div class="stat-label">Shelf life</div>
+        <div class="stat-sub">no refrigeration</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-0">0</div>
+        <div class="stat-label">Prep required</div>
+        <div class="stat-sub">grab &amp; squeeze</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-100">100%</div>
+        <div class="stat-label">Natural sweetener</div>
+        <div class="stat-sub">monkfruit, no sugar</div>
+      </div>
+    </div>
+
+    <!-- ── Who we serve (tabbed segments) ────────────────── -->
+    <div class="seg-card" role="region" aria-label="Who we serve">
+      <div class="seg-tabs" role="tablist" aria-label="Customer segments">
+        <button class="seg-tab active" role="tab" aria-selected="true" aria-controls="seg-panel" data-seg="offices"
+          id="tab-offices">🏢<span>Offices</span></button>
+        <button class="seg-tab" role="tab" aria-selected="false" aria-controls="seg-panel" data-seg="gyms"
+          id="tab-gyms">🏋️<span>Gyms</span></button>
+        <button class="seg-tab" role="tab" aria-selected="false" aria-controls="seg-panel" data-seg="events"
+          id="tab-events">📅<span>Events</span></button>
+        <button class="seg-tab" role="tab" aria-selected="false" aria-controls="seg-panel" data-seg="retail"
+          id="tab-retail">🏪<span>Retail</span></button>
+      </div>
+      <!-- Panel content updated by about.js on tab click -->
+      <div class="seg-body fade-in" id="seg-panel" role="tabpanel">
+        <div class="seg-icon-wrap" id="seg-icon">🏢</div>
+        <div class="seg-content">
+          <h3 id="seg-headline">Fuel your team instantly</h3>
+          <div class="seg-points" id="seg-points">
+            <span class="seg-point">No machine noise or mess</span>
+            <span class="seg-point">Pantry-friendly storage</span>
+            <span class="seg-point">Bulk pricing from 50 units</span>
+          </div>
+        </div>
+        <a href="catalog.html"
+          style="flex-shrink:0;font-size:13px;color:var(--amber);white-space:nowrap;margin-left: auto;;">View products
+          →</a>
+      </div>
+    </div>
+
+    <!-- ── Our values ─────────────────────────────────────── -->
+    <div role="region" aria-label="Our values" style="margin-bottom:1.5rem;">
+      <p style="font-size:11px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem;">
+        What we stand for</p>
+      <div class="values-row">
+        <div class="value-card">
+          <div class="value-icon" style="background:#FEF3E2;">☕</div>
+          <div>
+            <div class="value-title">Quality Sourcing</div>
+            <div class="value-blurb">Vietnamese beans, sustainably sourced.</div>
+          </div>
+        </div>
+        <div class="value-card">
+          <div class="value-icon" style="background:#EEF2FF;">⚡</div>
+          <div>
+            <div class="value-title">Zero Prep</div>
+            <div class="value-blurb">No machine. No queue. Squeeze and go.</div>
+          </div>
+        </div>
+        <div class="value-card">
+          <div class="value-icon" style="background:#F0FDF4;">🌿</div>
+          <div>
+            <div class="value-title">Clean Ingredients</div>
+            <div class="value-blurb">Monkfruit-sweetened. No preservatives.</div>
+          </div>
+        </div>
+        <div class="value-card">
+          <div class="value-icon" style="background:#F0F9FF;">❄️</div>
+          <div>
+            <div class="value-title">No Cold-Chain</div>
+            <div class="value-blurb">Shelf-stable. Cuts logistics cost.</div>
+          </div>
+        </div>
+        <div class="value-card">
+          <div class="value-icon" style="background:#FAF5FF;">📦</div>
+          <div>
+            <div class="value-title">Pocket-Sized</div>
+            <div class="value-blurb">Fits anywhere — bag, drawer, kit.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Competitive edge ───────────────────────────────── -->
+    <div class="hero" style="margin-bottom:1.5rem;" role="region" aria-label="Why ESPRESSGO">
+      <p style="font-size:11px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem;">
+        Our edge</p>
+      <h2 style="color:var(--cream);margin-bottom:1.5rem;">Why ESPRESSGO?</h2>
+      <div class="edge-grid">
+        <div class="edge-card">
+          <div class="edge-vs">vs. Café coffee</div>
+          <p class="edge-win">No queue. No wait. Ready at your desk in seconds.</p>
+        </div>
+        <div class="edge-card">
+          <div class="edge-vs">vs. Canned RTD</div>
+          <p class="edge-win">No fridge. More portable. Richer caffeine hit.</p>
+        </div>
+        <div class="edge-card">
+          <div class="edge-vs">vs. Energy drinks</div>
+          <p class="edge-win">Coffee taste. Natural ingredients. Smaller form.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Current stage indicator ───────────────────────── -->
+    <div class="stage-bar" role="status">
+      <div class="stage-pill">
+        <div class="pulse-dot"></div>
+        <span>Prototype &amp; market-testing stage · First sales made · Actively validating segments</span>
+      </div>
+      <a href="contact.html" style="font-size:13px;color:var(--brown);">Get in touch →</a>
+    </div>
+
+  </main>
+
+  <!-- Footer injected by buildFooter() -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Supabase client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Your Supabase project URL/key -->
+  <script src="supabase-config.js"></script>
+
+  <!-- Shared utilities -->
+  <script src="shared.js"></script>
+  <!-- Page logic: animated counters, segment tabs -->
+  <script src="js/about.js"></script>
+
+</body>
+
+</html>

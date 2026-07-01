@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Catalog — ESPRESSGO B2B Wholesale Portal</title>
+
+  <meta name="description"
+    content="Browse ESPRESSGO wholesale products with volume pricing. Order espresso gel shots in bulk with tiered discounts." />
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="shared.css" />
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="css/catalog.css" />
+</head>
+
+<body>
+
+  <!-- Navigation injected by buildNav() -->
+  <div id="nav-placeholder"></div>
+
+  <main class="page-wrap" id="main-content">
+
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <div class="hero" aria-labelledby="catalog-heading">
+      <div class="hero-inner">
+
+        <div class="hero-badge">
+          Wholesale Catalog
+        </div>
+
+        <h1 id="catalog-heading">
+          Bulk pricing on every order.
+        </h1>
+
+        <p>
+          Per carton of 50 pouches · Volume discounts applied automatically as you order.
+        </p>
+
+      </div>
+
+      <!-- Product feature chips -->
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.5rem;position:relative;z-index:1;">
+
+        <span class="chip">⚡ ~65mg caffeine</span>
+        <span class="chip">❄️ No fridge needed</span>
+        <span class="chip">🕐 Up to 12-month shelf life</span>
+        <span class="chip">📦 Pocket-sized pouch</span>
+
+      </div>
+    </div>
+
+    <!-- ── Active product cards ──────────────────────────── -->
+    <!-- Populated by renderAll() in catalog.js -->
+    <div id="products-list" role="list" aria-label="Active products">
+    </div>
+
+    <!-- ── Coming soon section ───────────────────────────── -->
+    <!-- Shown only when comingSoon products exist -->
+    <div id="coming-soon-section" style="margin-bottom:2.5rem;display:none;">
+
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
+
+        <h2 style="color:var(--brown);font-size:1.25rem;">
+          Coming Soon
+        </h2>
+
+        <span class="chip" style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;">
+          On the Roadmap
+        </span>
+
+      </div>
+
+      <div class="coming-grid" id="coming-grid"></div>
+
+    </div>
+
+  </main>
+
+  <!-- ── Sticky checkout bar ─────────────────────────────── -->
+  <!-- Appears when cart has items -->
+  <div id="checkout-bar" role="region" aria-label="Shopping cart" aria-live="polite">
+
+    <div class="checkout-inner">
+
+      <div style="display:flex;align-items:center;gap:.75rem;">
+
+        <div class="cart-icon-wrap">
+          <div class="cart-icon">🛒</div>
+          <span class="cart-badge" id="cart-count-badge">0</span>
+        </div>
+
+        <div>
+          <div id="cart-summary-text" style="font-size:13px;color:var(--brown);">
+          </div>
+
+          <div id="cart-total-text" style="font-size:12px;color:var(--muted);">
+          </div>
+        </div>
+
+      </div>
+
+      <div style="display:flex;align-items:center;gap:.75rem;">
+
+        <button id="clear-cart-btn" class="btn-ghost btn-sm" type="button">
+          Clear
+        </button>
+
+        <button id="checkout-btn" class="btn-dark" type="button">
+          Checkout →
+        </button>
+        
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Order confirmation modal ───────────────────────── -->
+  <div class="modal-overlay" id="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+    <div class="modal-box">
+
+      <div class="modal-header">
+
+        <div>
+          <h2 id="modal-title">
+            Confirm Order
+          </h2>
+
+          <p>
+            Review before submitting
+          </p>
+        </div>
+
+        <button class="modal-close" id="modal-close" aria-label="Close" type="button">
+          ×
+        </button>
+
+      </div>
+
+      <!-- Cart items list -->
+      <div class="modal-items" id="modal-items" role="list">
+      </div>
+
+      <!-- Totals: cartons, pouches, grand total -->
+      <div class="modal-totals" id="modal-totals">
+      </div>
+
+      <!-- Delivery address note -->
+      <div class="modal-delivery" id="modal-delivery">
+
+        📦 <span id="delivery-text"></span>
+
+      </div>
+
+      <div class="modal-actions">
+
+        <button class="btn-ghost btn-full" id="modal-back" type="button">
+          Go Back
+        </button>
+
+        <button class="btn-dark btn-full" id="modal-place" type="button">
+          ✓ Place Order
+        </button>
+
+      </div>
+      <div class="recurring-order">
+        <label>
+          <input
+            type="checkbox"
+            id="recurringOrder"
+          >
+          Make this a recurring order
+        </label>
+
+        <select id="deliveryInterval" disabled>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Order success banner ────────────────────────────── -->
+  <!-- Bottom-centre, auto-dismisses -->
+  <div id="order-success" role="status" aria-live="polite">
+
+    <div
+      style="width:32px;height:32px;background:rgba(34,197,94,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+      ✅
+    </div>
+
+    <div>
+      <div style="font-size:14px;">
+        Order placed successfully!
+      </div>
+
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">
+        Track it in your Account page.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer injected by buildFooter() -->
+  <div id="footer-placeholder"></div>
+
+
+
+  <!-- Supabase client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Your Supabase project URL/key -->
+  <script src="supabase-config.js"></script>
+
+  <!-- Shared utilities -->
+  <script src="shared.js"></script>
+
+  <script>
+    (async function checkCatalogAccess() {
+      try {
+        // 1. Get the authenticated session user safely
+        const { data: { user }, error: authError } = await sb.auth.getUser();
+        
+        // 🔓 INTENDED B2B PUBLIC FEATURE RESTORATION:
+        // If they are not logged in at all, let them browse the catalog publicly!
+        if (authError || !user) {
+          console.log("Public visitor detected. Granting read-only catalog access.");
+          revealCatalogContent();
+          return;
+        }
+
+        // 2. If they ARE logged in, fetch their profile to check completeness
+        const { data: dbProfile, error: dbError } = await sb
+          .from('profiles')
+          .select('role, company_name, business_type, delivery_address')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (dbError) throw dbError;
+
+        // 3. Evaluate active registration details
+        if (dbProfile) {
+          // If logged in but data fields are empty, push them to complete it
+          if (!dbProfile.company_name || !dbProfile.business_type || !dbProfile.delivery_address) {
+            console.log("Logged-in session profile incomplete. Routing to completion page...");
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            
+            window.location.replace(isLocalhost 
+              ? window.location.origin + '/espresgo_b2b_portal/complete-profile.html' 
+              : window.location.origin + '/complete-profile.html'
+            );
+          } else {
+            console.log("Logged-in session profile complete. Access granted.");
+            if (typeof Auth !== 'undefined' && typeof Auth.refreshUser === 'function') {
+              await Auth.refreshUser();
+            }
+            revealCatalogContent();
+          }
+        } else {
+          // Row missing entirely (Brand new authenticated Google signup)
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          window.location.replace(isLocalhost 
+            ? window.location.origin + '/espresgo_b2b_portal/complete-profile.html' 
+            : window.location.origin + '/complete-profile.html'
+          );
+        }
+      } catch (error) {
+        console.error('Catalog gatekeeper exception:', error);
+        revealCatalogContent(); // Fallback safety to ensure page doesn't stay hidden if a network error occurs
+      }
+
+      // Helper function to safely show the layout elements smoothly
+      function revealCatalogContent() {
+        const content = document.getElementById('main-content');
+        if (content) {
+          content.style.setProperty('display', 'block', 'important');
+        }
+      }
+    })();
+  </script>
+
+  <!-- Page logic: cart management, modal, order submission -->
+  <script src="js/catalog.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Account — ESPRESSGO B2B Wholesale Portal</title>
+
+  <meta
+    name="description"
+    content="Manage your ESPRESSGO wholesale account, orders, profile and billing."/>
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="shared.css"/>
+
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="css/account.css"/>
+</head>
+
+<body>
+
+  <!-- Navigation is injected here by buildNav() in shared.js -->
+  <div id="nav-placeholder"></div>
+
+  <!-- Toast notification container -->
+  <div id="toast-container"></div>
+
+  <main class="page-wrap" id="main-content">
+
+    <!-- ── Account Hero ─────────────────────────────────── -->
+    <div
+      class="hero"
+      style="margin-bottom:1.75rem;"
+      aria-labelledby="acct-heading">
+
+      <div
+        style="position:relative;z-index:1;display:flex;align-items:center;gap:1.25rem;">
+
+        <div
+          id="acct-avatar"
+          style="width:56px;height:56px;background:var(--amber);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.25rem;font-weight:600;flex-shrink:0;">
+        </div>
+
+        <div>
+          <div
+            style="color:var(--muted-lt);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.2rem;">
+            Account Hub
+          </div>
+
+          <h1
+            id="acct-heading"
+            style="color:var(--cream);font-size:1.5rem;">
+          </h1>
+
+          <p
+            id="acct-sub"
+            style="color:var(--muted);font-size:13px;margin-top:2px;">
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Tab Navigation ───────────────────────────────── -->
+    <div
+      class="tab-bar"
+      role="tablist"
+      aria-label="Account sections">
+
+      <button
+        class="tab-btn active"
+        role="tab"
+        data-tab="overview"
+        id="tab-overview"
+        aria-selected="true"
+        type="button">
+        Overview
+      </button>
+
+      <button
+        class="tab-btn"
+        role="tab"
+        data-tab="orders"
+        id="tab-orders"
+        aria-selected="false"
+        type="button">
+
+        Orders
+
+        <span
+          id="order-count-badge"
+          class="text-xs"
+          style="background:#F0EAE4;color:var(--brown-lt);padding:1px 6px;border-radius:9999px;">
+        </span>
+      </button>
+
+      <button
+        class="tab-btn"
+        role="tab"
+        data-tab="profile"
+        id="tab-profile"
+        aria-selected="false"
+        type="button">
+        Profile
+      </button>
+
+      <button
+        class="tab-btn"
+        role="tab"
+        data-tab="billing"
+        id="tab-billing"
+        aria-selected="false"
+        type="button">
+        Billing
+      </button>
+
+      <button 
+        class="tab-btn"
+        role="tab"
+        data-tab="subscriptions"
+        id="tab-subscriptions"
+        aria-selected="false"
+        type="button">
+        My Subscriptions
+      </button>
+
+    </div>
+
+    <!-- ── Loading State ────────────────────────────────── -->
+    <div
+      id="account-loading"
+      class="card"
+      style="padding:2rem;text-align:center;color:var(--muted);">
+
+      Loading your account…
+
+    </div>
+
+    <!-- ── Tab Panels ───────────────────────────────────── -->
+    <!-- Each panel is populated by its render*() function in account.js -->
+    <div
+      id="account-panels"
+      style="display:none;">
+
+      <div
+        id="panel-overview"
+        role="tabpanel"
+        class="fade-in">
+      </div>
+
+      <div
+        id="panel-orders"
+        role="tabpanel"
+        class="fade-in"
+        style="display:none;">
+      </div>
+
+      <div
+        id="panel-profile"
+        role="tabpanel"
+        class="fade-in"
+        style="display:none;">
+      </div>
+
+      <div
+        id="panel-billing"
+        role="tabpanel"
+        class="fade-in"
+        style="display:none;">
+      </div>
+
+      <div
+        id="panel-subscriptions"
+        role="tabpanel"
+        class="fade-in"
+        style="display:none;">
+
+        <div id="subscriptionsList"></div>
+
+       </div>
+    </div>
+
+  </main>
+
+  <!-- Footer is injected here by buildFooter() in shared.js -->
+  <div id="footer-placeholder"></div>
+
+  <!-- Logic for PDF generation with PDFKit -->
+  <script src="https://unpkg.com/pdfkit@0.15.2/js/pdfkit.standalone.js"></script>
+
+  <!-- Supabase client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Your Supabase project URL/key -->
+  <script src="supabase-config.js"></script>
+
+  <!-- Shared website logic -->
+  <script src="shared.js"></script>
+
+  <!-- Account page logic -->
+  <script src="js/account.js"></script>
+
+</body>
+</html>

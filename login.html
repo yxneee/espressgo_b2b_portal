@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In — ESPRESSGO B2B Wholesale Portal</title>
+  <meta name="description" content="Sign in or register for your ESPRESSGO B2B wholesale buyer account."/>
+
+  <!-- Shared design system -->
+  <link rel="stylesheet" href="shared.css"/>
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="css/login.css"/>
+</head>
+
+<body>
+  <div class="login-wrap">
+
+    <!-- ── Left brand panel (visible on desktop ≥1024px) ── -->
+    <!-- Decorative — aria-hidden so screen readers skip it -->
+    <div class="brand-panel" aria-hidden="true">
+      <div>
+
+        <!-- Logo -->
+        <div class="brand-logo">
+          <div class="brand-logo-icon">E</div>
+          <div>
+            <div style="color:var(--cream);letter-spacing:.2em;font-size:13px;">
+              ESPRESSGO
+            </div>
+            <div style="color:var(--brown-lt);font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-top:2px;">
+              B2B Wholesale Portal
+            </div>
+          </div>
+        </div>
+
+        <!-- Headline -->
+        <div class="brand-heading">
+          <h2>
+            Wholesale coffee<br>
+            for serious buyers.
+          </h2>
+          <p>
+            Pocket-sized gel shots — no machine, no fridge. Tiered bulk pricing with a dedicated account manager.
+          </p>
+        </div>
+
+        <!-- Pouch product images (injected by login.js) -->
+        <div class="pouch-trio" id="pouch-trio"></div>
+      </div>
+
+      <!-- Trust signals list -->
+      <div class="trust-list">
+        <div class="trust-item">
+          <div class="trust-icon">✓</div>
+          <span class="trust-text">Verified business buyers only</span>
+        </div>
+
+        <div class="trust-item">
+          <div class="trust-icon">💳</div>
+          <span class="trust-text">Net 30 payment terms available</span>
+        </div>
+
+        <div class="trust-item">
+          <div class="trust-icon">⚡</div>
+          <span class="trust-text">Volume discounts from 10 cartons</span>
+        </div>
+
+        <div class="trust-item">
+          <div class="trust-icon">📦</div>
+          <span class="trust-text">SG-formulated · No preservatives</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Right form panel ─────────────────────────────── -->
+    <div class="form-panel">
+
+      <a href="catalog.html" class="back-link" aria-label="Back to home">
+        <div class="back-icon">←</div>
+        Back to home
+      </a>
+
+      <div class="form-center">
+        <div class="form-box">
+
+          <!-- Mobile-only logo (hidden on desktop) -->
+          <div class="mobile-logo">
+            <div class="mobile-logo-icon">E</div>
+            <div>
+              <div style="color:var(--brown);letter-spacing:.12em;font-size:14px;">
+                ESPRESSGO
+              </div>
+              <div style="color:var(--muted);font-size:10px;">
+                B2B Wholesale
+              </div>
+            </div>
+          </div>
+
+          <!-- Form title (updated by switchMode() in login.js) -->
+          <div style="margin-bottom:1.75rem;">
+            <h1
+              id="form-title"
+              style="font-size:1.5rem;color:var(--brown);margin-bottom:.25rem;">
+              Welcome back
+            </h1>
+
+            <p
+              id="form-subtitle"
+              style="font-size:13px;color:var(--muted);">
+              Sign in to your wholesale account.
+            </p>
+          </div>
+
+          <!-- Sign In / Register tab toggle -->
+          <div class="tab-bar" role="tablist" aria-label="Sign in or register">
+            <button
+              class="tab-btn active"
+              role="tab"
+              aria-selected="true"
+              id="tab-signin"
+              aria-controls="form-fields"
+              type="button">
+              Sign In
+            </button>
+
+            <button
+              class="tab-btn"
+              role="tab"
+              aria-selected="false"
+              id="tab-register"
+              aria-controls="form-fields"
+              type="button">
+              Register
+            </button>
+          </div>
+
+          <!-- Server-side error alert -->
+          <div class="server-err" id="server-err" role="alert" style="display:none;">
+            <span>⚠️</span>
+            <span id="server-err-text"></span>
+          </div>
+
+          <form id="auth-form" novalidate aria-label="Authentication form">
+
+            <!-- Register-only fields (hidden in sign-in mode) -->
+            <div id="register-fields" style="display:none;">
+
+              <div class="field">
+                <label for="f-contactName">Contact Name</label>
+                <input
+                  class="input"
+                  id="f-contactName"
+                  type="text"
+                  placeholder="Jane Tan"
+                  autocomplete="name"/>
+
+                <div
+                  class="err-msg"
+                  id="err-contactName"
+                  role="alert"
+                  style="display:none;">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="f-companyName">Company Name</label>
+                <input
+                  class="input"
+                  id="f-companyName"
+                  type="text"
+                  placeholder="Acme Coffee Co."
+                  autocomplete="organization"/>
+
+                <div
+                  class="err-msg"
+                  id="err-companyName"
+                  role="alert"
+                  style="display:none;">
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="f-businessType">Business Type</label>
+                <select class="input" id="f-businessType">
+                  <option value="">Select type…</option>
+                  <option>Office Manager</option>
+                  <option>Gym Operator</option>
+                  <option>Event Organiser</option>
+                  <option>Café Distributor</option>
+                  <option>Convenience Store</option>
+                  <option>Other</option>
+                </select>
+
+                <div
+                  class="err-msg"
+                  id="err-businessType"
+                  role="alert"
+                  style="display:none;">
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Email (shared between sign-in and register) -->
+            <div class="field">
+              <label for="f-email">Email Address</label>
+              <input
+                class="input"
+                id="f-email"
+                type="email"
+                placeholder="you@company.com"
+                autocomplete="email"/>
+
+              <div
+                class="err-msg"
+                id="err-email"
+                role="alert"
+                style="display:none;">
+              </div>
+            </div>
+
+            <!-- Password with show/hide toggle and optional strength indicator -->
+            <div class="field">
+
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.375rem;">
+                <label for="f-password" style="margin-bottom:0;">
+                  Password
+                </label>
+
+                <!-- "Forgot password?" only shown in sign-in mode -->
+                <button
+                  type="button"
+                  id="forgot-btn"
+                  style="font-size:10px;color:var(--amber);background:none;border:none;cursor:pointer;display:none;">
+                  Forgot password?
+                </button>
+              </div>
+
+              <div class="pw-wrap">
+                <input
+                  class="input"
+                  id="f-password"
+                  type="password"
+                  placeholder="••••••••"
+                  autocomplete="current-password"/>
+
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  id="pw-toggle-1"
+                  aria-label="Show password">
+                  👁
+                </button>
+              </div>
+
+              <div
+                class="err-msg"
+                id="err-password"
+                role="alert"
+                style="display:none;">
+              </div>
+
+              <!-- Strength bar (register mode only) -->
+              <div id="strength-wrap" style="display:none;margin-top:.5rem;">
+                <div
+                  class="strength-bar"
+                  role="progressbar"
+                  aria-label="Password strength"
+                  aria-valuenow="0"
+                  aria-valuemin="0"
+                  aria-valuemax="4">
+
+                  <div class="strength-seg" id="s1"></div>
+                  <div class="strength-seg" id="s2"></div>
+                  <div class="strength-seg" id="s3"></div>
+                  <div class="strength-seg" id="s4"></div>
+                </div>
+
+                <p
+                  id="strength-label"
+                  style="font-size:10px;color:var(--muted);margin-top:.25rem;">
+                </p>
+              </div>
+
+            </div>
+
+            <!-- Confirm password (register mode only) -->
+            <div class="field" id="confirm-field" style="display:none;">
+              <label for="f-confirm">Confirm Password</label>
+
+              <div class="pw-wrap">
+                <input
+                  class="input"
+                  id="f-confirm"
+                  type="password"
+                  placeholder="Re-enter password"
+                  autocomplete="new-password"/>
+
+                <button
+                  type="button"
+                  class="pw-toggle"
+                  id="pw-toggle-2"
+                  aria-label="Show confirm password">
+                  👁
+                </button>
+              </div>
+
+              <div
+                class="err-msg"
+                id="err-confirm"
+                role="alert"
+                style="display:none;">
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="btn-dark btn-full"
+              id="auth-submit"
+              style="margin-top:.5rem;">
+
+              <span id="auth-label">Sign In</span>
+              <span
+                class="spinner"
+                id="auth-spinner"
+                style="display:none;"
+                aria-label="Loading...">
+              </span>
+            </button>
+
+            <div style="display: flex; align-items: center; margin: 1.5rem 0 1rem 0; color: var(--muted-lt); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">
+              <div style="flex: 1; height: 1px; background-color: rgba(0,0,0,0.08);"></div>
+              <span style="padding: 0 0.75rem;">or continue with</span>
+              <div style="flex: 1; height: 1px; background-color: rgba(0,0,0,0.08);"></div>
+            </div>
+
+            <button
+              type="button"
+              id="google-signin-btn"
+              style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #ffffff; border: 1px solid #dadce0; color: #3c4043; padding: 0.65rem; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background-color 0.2s;"
+              onmouseover="this.style.backgroundColor='#f8f9fa'"
+              onmouseout="this.style.backgroundColor='#ffffff'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Continue with Google
+            </button>
+
+          </form>
+
+          <!-- Access note -->
+          <p style="font-size:11px;text-align:center;color:var(--muted-lt);margin-top:1.5rem;line-height:1.6;">
+            Wholesale access for verified Singapore businesses only.<br>
+            Register a buyer account to access ordering features.
+          </p>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Supabase client library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Your Supabase project URL/key -->
+  <script src="supabase-config.js"></script>
+
+  <!-- Shared utilities: Auth, Products, Orders, nav, toast, SVG helpers -->
+  <script src="shared.js"></script>
+
+  <!-- Page logic: tab switching, validation, form submit, pouch trio -->
+  <script src="js/login.js"></script>
+
+</body>
+</html>
