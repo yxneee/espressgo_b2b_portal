@@ -9,11 +9,9 @@
   },
   "name": "espresgo_b2b_portal",
   "version": "1.0.0",
-  "description": "https://espresgo-b2-b-portal.vercel.app/quick-order",
-  "main": "server.js",
+  "description": "ESPRESSGO B2B Portal",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node api/index.js"
   },
   "repository": {
     "type": "git",
