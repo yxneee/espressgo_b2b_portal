@@ -5,13 +5,12 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "playwright": "^1.60.0",
     "stripe": "^22.3.0"
   },
   "name": "espresgo_b2b_portal",
   "version": "1.0.0",
   "description": "https://espresgo-b2-b-portal.vercel.app/quick-order",
-  "main": "playwright_agent.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
