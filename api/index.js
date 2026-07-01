@@ -32,7 +32,7 @@ app.get('/', (req, res) => {
 });
 
 // CREATE CHECKOUT
-app.post('/create-checkout-session', async (req, res) => {
+app.post('/api/create-checkout-session', async (req, res) => {
   const { cart, profile } = req.body;
 
   console.log("Incoming cart:", cart);
@@ -128,7 +128,7 @@ app.post('/create-checkout-session', async (req, res) => {
 });
 
 // WEBHOOK
-app.post('/webhook', async (req, res) => {
+app.post('/api/webhook', async (req, res) => {
   console.log("--- WEBHOOK HIT ---");
   const sig = req.headers['stripe-signature'];
   let event;
