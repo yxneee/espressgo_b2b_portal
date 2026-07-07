@@ -654,13 +654,89 @@ function renderOverview() {
     order.status === 'processing'
   ).length;
 
-  const creditUsed = Math.min((spend / creditLimit) * 100, 100);
+  const isApproved = user.creditStatus === 'approved';
+  const creditOrders = orders.filter(o => o.paymentMethod === 'credit' && o.paymentStatus === 'unpaid');
+  const creditSpend = creditOrders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+  const limitVal = user.creditLimit || 25000;
+  const creditUsed = Math.min((creditSpend / limitVal) * 100, 100);
 
   const nextStatus = orders.find(order => order.status === 'shipped')
     ? 'In Transit'
     : orders.find(order => order.status === 'processing')
       ? 'Being Prepared'
       : '—';
+
+  let creditWidgetHTML = '';
+  if (isApproved) {
+    creditWidgetHTML = `
+      <div
+        class="kpi-card"
+        style="flex-direction:column;gap:.75rem;">
+
+        <div style="display:flex;align-items:center;gap:.75rem;">
+
+          <div
+            class="kpi-icon"
+            style="background:#FEF3E2;">
+            💳
+          </div>
+
+          <div>
+            <div class="kpi-label">Credit Available</div>
+
+            <div style="color:var(--brown);">
+              SGD $${Math.max(limitVal - creditSpend, 0).toLocaleString()}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="credit-bar">
+          <div
+            class="credit-fill"
+            style="width:${creditUsed}%;background:var(--amber);">
+          </div>
+        </div>
+
+        <div
+          style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted-lt);">
+          <span>Used $${creditSpend.toLocaleString()}</span>
+          <span>Limit $${limitVal.toLocaleString()}</span>
+        </div>
+
+      </div>
+    `;
+  } else {
+    creditWidgetHTML = `
+      <div
+        class="kpi-card"
+        style="flex-direction:column;gap:.5rem;justify-content:center;">
+
+        <div style="display:flex;align-items:center;gap:.75rem;">
+
+          <div
+            class="kpi-icon"
+            style="background:#FEF3E2;">
+            💳
+          </div>
+
+          <div>
+            <div class="kpi-label">B2B Credit Terms</div>
+
+            <div style="color:var(--brown);font-weight:500;font-size:0.95rem;">
+              ${user.creditStatus === 'applied' ? '⏳ Pending Review' : user.creditStatus === 'rejected' ? '❌ Rejected' : '💡 Not Enabled'}
+            </div>
+          </div>
+
+        </div>
+        
+        <div style="font-size:10px;color:var(--muted);margin-top:0.25rem;">
+          ${user.creditStatus === 'applied' ? 'Your application is under evaluation.' : user.creditStatus === 'rejected' ? 'Credit terms not available.' : 'Apply in the Billing tab.'}
+        </div>
+
+      </div>
+    `;
+  }
 
   document.getElementById('panel-overview').innerHTML = `
     <div class="kpi-grid">
@@ -722,42 +798,7 @@ function renderOverview() {
 
       </div>
 
-      <div
-        class="kpi-card"
-        style="flex-direction:column;gap:.75rem;">
-
-        <div style="display:flex;align-items:center;gap:.75rem;">
-
-          <div
-            class="kpi-icon"
-            style="background:#FEF3E2;">
-            💳
-          </div>
-
-          <div>
-            <div class="kpi-label">Credit Available</div>
-
-            <div style="color:var(--brown);">
-              SGD $${Math.max(creditLimit - spend, 0).toLocaleString()}
-            </div>
-          </div>
-
-        </div>
-
-        <div class="credit-bar">
-          <div
-            class="credit-fill"
-            style="width:${creditUsed}%;background:var(--amber);">
-          </div>
-        </div>
-
-        <div
-          style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted-lt);">
-          <span>Used $${spend.toLocaleString()}</span>
-          <span>Limit $25,000</span>
-        </div>
-
-      </div>
+      ${creditWidgetHTML}
 
     </div>
 
@@ -839,7 +880,15 @@ function renderOverview() {
             </div>
 
             <div style="font-size:11px;color:var(--muted);">
-              Net 30 · SGD $25,000 limit
+              ${
+                user.creditStatus === 'approved'
+                  ? `${user.paymentTerms} · SGD $${(user.creditLimit || 25000).toLocaleString()} limit`
+                  : user.creditStatus === 'applied'
+                    ? 'Credit terms pending review'
+                    : user.creditStatus === 'rejected'
+                      ? 'Credit application rejected'
+                      : 'Apply for B2B Credit Terms'
+              }
             </div>
 
           </div>
@@ -1282,9 +1331,14 @@ async function saveProfile() {
 
 function renderBilling() {
   const orders = getMyOrders();
-  const spend = totalSpend(orders);
-  const available = Math.max(creditLimit - spend, 0);
-  const used = Math.min((spend / creditLimit) * 100, 100);
+  const u = user || Auth.getUser();
+
+  // Credit calculation
+  const creditOrders = orders.filter(o => o.paymentMethod === 'credit' && o.paymentStatus === 'unpaid');
+  const creditSpend = creditOrders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+  const limit = u.creditLimit || 25000;
+  const available = Math.max(limit - creditSpend, 0);
+  const used = Math.min((creditSpend / limit) * 100, 100);
 
   const barColor = used > 80
     ? '#f87171'
@@ -1292,68 +1346,84 @@ function renderBilling() {
       ? '#fbbf24'
       : 'var(--amber)';
 
-  const u = user || Auth.getUser();
+  let creditSectionHTML = '';
 
-  document.getElementById('panel-billing').innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:1rem;">
-
-      <div
-        class="card"
-        style="padding:1.5rem;">
-
-        <div
-          style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
-
-          <div
-            style="width:36px;height:36px;background:#FEF3E2;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+  if (u.creditStatus === 'none') {
+    creditSectionHTML = `
+      <div class="card" style="padding:2rem 1.5rem; text-align:center;">
+        <div style="font-size:2rem; margin-bottom:.5rem;">💳</div>
+        <h3 style="color:var(--brown); margin-bottom:.5rem; font-size:1.1rem;">Instant B2B Credit Issuance</h3>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:1.25rem; line-height:1.4; max-width: 480px; margin-left: auto; margin-right: auto;">
+          Get credit terms of Net 30 or Net 60 to place wholesale orders instantly and pay later. Application approval takes minutes.
+        </p>
+        <button onclick="applyForCredit()" class="btn-dark btn-sm" id="apply-credit-btn" style="padding: 8px 16px;">
+          Apply for Credit Terms
+        </button>
+      </div>
+    `;
+  } else if (u.creditStatus === 'applied') {
+    creditSectionHTML = `
+      <div class="card" style="padding:2rem 1.5rem; text-align:center;">
+        <div style="font-size:2rem; margin-bottom:.5rem;">⏳</div>
+        <h3 style="color:var(--brown); margin-bottom:.5rem; font-size:1.1rem;">Application Pending Review</h3>
+        <p style="font-size:12px; color:var(--muted); line-height:1.4; max-width: 480px; margin-left: auto; margin-right: auto;">
+          Your corporate credit terms application is currently under evaluation. Our finance team will confirm and approve your limit shortly.
+        </p>
+      </div>
+    `;
+  } else if (u.creditStatus === 'rejected') {
+    creditSectionHTML = `
+      <div class="card" style="padding:2rem 1.5rem; text-align:center;">
+        <div style="font-size:2rem; margin-bottom:.5rem;">❌</div>
+        <h3 style="color:var(--brown); margin-bottom:.5rem; font-size:1.1rem;">Credit Application Declined</h3>
+        <p style="font-size:12px; color:var(--muted); margin-bottom:1.25rem; line-height:1.4; max-width: 480px; margin-left: auto; margin-right: auto;">
+          We cannot offer credit terms for your account at this time. You can still order through our standard card checkout.
+        </p>
+        <button onclick="applyForCredit()" class="btn-ghost btn-sm" id="apply-credit-btn" style="border: 1px solid var(--muted-lt); padding: 6px 12px; border-radius: 6px;">
+          Re-apply for Credit Terms
+        </button>
+      </div>
+    `;
+  } else if (u.creditStatus === 'approved') {
+    creditSectionHTML = `
+      <div class="card" style="padding:1.5rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
+          <div style="width:36px;height:36px;background:#FEF3E2;border-radius:10px;display:flex;align-items:center;justify-content:center;">
             💳
           </div>
-
-          <h3 style="color:var(--brown);">
-            Payment Terms
-          </h3>
-
+          <h3 style="color:var(--brown);">Payment Terms</h3>
         </div>
 
         ${[
-          ['Payment Terms', 'Net 30', false],
-          ['Credit Limit', 'SGD $25,000', false],
+          ['Payment Terms', u.paymentTerms || 'Net 30', false],
+          ['Credit Limit', `SGD $${limit.toLocaleString()}`, false],
           ['Available Credit', `SGD $${available.toLocaleString()}`, true],
-          ['Used', `SGD $${spend.toLocaleString()}`, false]
+          ['Unpaid Credit Balance', `SGD $${creditSpend.toLocaleString()}`, false]
         ].map(([label, value, green]) => `
           <div class="billing-row">
-
-            <span style="color:var(--brown-lt);">
-              ${escapeHTML(label)}
-            </span>
-
+            <span style="color:var(--brown-lt);">${escapeHTML(label)}</span>
             <span style="${green ? 'color:#16a34a;' : 'color:var(--brown);'}">
               ${escapeHTML(value)}
             </span>
-
           </div>
         `).join('')}
 
         <div style="margin-top:1rem;">
-
-          <div
-            style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:.35rem;">
-
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:.35rem;">
             <span>Credit utilisation</span>
             <span>${Math.round(used)}%</span>
-
           </div>
-
           <div class="credit-bar">
-            <div
-              class="credit-fill"
-              style="width:${used}%;background:${barColor};">
-            </div>
+            <div class="credit-fill" style="width:${used}%;background:${barColor};"></div>
           </div>
-
         </div>
-
       </div>
+    `;
+  }
+
+  document.getElementById('panel-billing').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      ${creditSectionHTML}
 
       <div
         class="card"
@@ -1626,5 +1696,41 @@ async function cancelSubscription(id) {
     loadSubscriptions();
   }
 }
+
+async function applyForCredit() {
+  const btn = document.getElementById('apply-credit-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Applying...';
+  }
+
+  try {
+    const { error } = await sb
+      .from('profiles')
+      .update({
+        credit_status: 'applied',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+
+    if (error) throw error;
+
+    showToast('Application Submitted', 'Your credit application is now pending review.');
+    user.creditStatus = 'applied';
+    
+    // Refresh user state
+    const refreshed = await Auth.refreshUser();
+    if (refreshed) user = refreshed;
+    renderAll();
+  } catch (err) {
+    console.error("Failed to submit B2B credit application:", err);
+    showToast('Application Failed', err.message || 'Could not submit application.', 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Apply for Credit Terms';
+    }
+  }
+}
+window.applyForCredit = applyForCredit;
 
 initAccountPage();

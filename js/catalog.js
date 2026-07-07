@@ -211,6 +211,97 @@ function loadFallbackProducts() {
    Product card renderer
    ============================================================ */
 
+function getProductDetailHTML(product) {
+  const name = (product.name || '').toLowerCase();
+  const id = (product.id || '').toLowerCase();
+  
+  if (name.includes('original') || name.includes('classic') || id.includes('original')) {
+    return `
+      <div class="drawer-content" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; border-top:1px solid #FAF8F5; padding-top:0.75rem; margin-top:0.75rem; text-align: left;">
+        <div>
+          <strong style="color:var(--brown); font-size:11px;">🌱 Ingredients</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Arabica Soluble Coffee, Erythritol, Konnyaku Jelly, Monk Fruit Extract.</p>
+        </div>
+        <div>
+          <strong style="color:var(--brown); font-size:11px;">📊 Nutrition (Per 50g)</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Energy: 12 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~70mg</p>
+        </div>
+        <div style="grid-column: span 2;">
+          <strong style="color:var(--brown); font-size:11px;">💡 Key Benefits</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Retort-sterilised for a 9-month shelf life. Squeeze directly from the pocket-sized pouch. Zero sugar & vegan-friendly.</p>
+        </div>
+      </div>
+    `;
+  } else if (name.includes('oat') || id.includes('oat')) {
+    return `
+      <div class="drawer-content" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; border-top:1px solid #FAF8F5; padding-top:0.75rem; margin-top:0.75rem; text-align: left;">
+        <div>
+          <strong style="color:var(--brown); font-size:11px;">🌱 Ingredients</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Arabica Soluble Coffee, Oat Milk Powder, Erythritol, Konnyaku Jelly, Monk Fruit Extract.</p>
+        </div>
+        <div>
+          <strong style="color:var(--brown); font-size:11px;">📊 Nutrition (Per 50g)</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Energy: 28 kcal · Carbs: 12g · Sugar: 1g · Fat: 0.5g · Caffeine: ~60mg</p>
+        </div>
+        <div style="grid-column: span 2;">
+          <strong style="color:var(--brown); font-size:11px;">💡 Key Benefits</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Rich, creamy oat milk blend. Retort-sterilised for a 10-month shelf life. No dairy, lactose-free, and vegan-friendly.</p>
+        </div>
+      </div>
+    `;
+  } else if (name.includes('matcha') || id.includes('matcha')) {
+    return `
+      <div class="drawer-content" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; border-top:1px solid #FAF8F5; padding-top:0.75rem; margin-top:0.75rem; text-align: left;">
+        <div>
+          <strong style="color:var(--brown); font-size:11px;">🌱 Ingredients</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Japanese Uji Matcha, Green Tea Extract, Erythritol, Konnyaku Jelly, Monk Fruit.</p>
+        </div>
+        <div>
+          <strong style="color:var(--brown); font-size:11px;">📊 Nutrition (Per 50g)</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Energy: 15 kcal · Carbs: 9g · Sugar: 0g · Fat: 0g · Caffeine: ~40mg</p>
+        </div>
+        <div style="grid-column: span 2;">
+          <strong style="color:var(--brown); font-size:11px;">💡 Key Benefits</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">L-Theanine & caffeine combo for calm, focused energy. Pocket-sized pouch, squeeze directly.</p>
+        </div>
+      </div>
+    `;
+  } else if (name.includes('decaf') || id.includes('decaf')) {
+    return `
+      <div class="drawer-content" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; border-top:1px solid #FAF8F5; padding-top:0.75rem; margin-top:0.75rem; text-align: left;">
+        <div>
+          <strong style="color:var(--brown); font-size:11px;">🌱 Ingredients</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Swiss Water Decaf Soluble Arabica Coffee, Erythritol, Konnyaku Jelly, Monk Fruit.</p>
+        </div>
+        <div>
+          <strong style="color:var(--brown); font-size:11px;">📊 Nutrition (Per 50g)</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Energy: 10 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~5mg</p>
+        </div>
+        <div style="grid-column: span 2;">
+          <strong style="color:var(--brown); font-size:11px;">💡 Key Benefits</strong>
+          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Decaffeinated using 100% chemical-free Swiss Water process. Safe for late-night coffee rituals.</p>
+        </div>
+      </div>
+    `;
+  }
+  return '';
+}
+
+function toggleProductDetails(productId) {
+  const detailsDiv = document.getElementById(`details-${productId}`);
+  const chevron = document.getElementById(`chevron-${productId}`);
+  if (!detailsDiv || !chevron) return;
+
+  if (detailsDiv.style.maxHeight === '0px' || !detailsDiv.style.maxHeight) {
+    detailsDiv.style.maxHeight = `${detailsDiv.scrollHeight}px`;
+    chevron.textContent = '▲';
+  } else {
+    detailsDiv.style.maxHeight = '0px';
+    chevron.textContent = '▼';
+  }
+}
+window.toggleProductDetails = toggleProductDetails;
+
 function renderProductCard(product) {
   const qty = cart[product.id] || 0;
   const activeTier = safeGetActiveTier(product.tiers, qty);
@@ -261,6 +352,18 @@ function renderProductCard(product) {
           `).join("")}
         </div>
 
+        <!-- Expandable details block -->
+        <div style="margin-top:0.25rem;">
+          <button type="button" class="details-toggle-btn" onclick="toggleProductDetails('${product.id}')" style="background:none; border:none; padding:0.25rem 0; font-size:12px; color:var(--amber); font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px; outline:none;">
+            <span>View Pouch Details</span>
+            <span class="chevron" id="chevron-${product.id}" style="font-size:8px;">▼</span>
+          </button>
+          
+          <div id="details-${product.id}" style="max-height:0px; overflow:hidden; transition:max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-sizing:border-box;">
+            ${getProductDetailHTML(product)}
+          </div>
+        </div>
+
         <div class="tier-section">
           <p class="tier-title">
             Volume Pricing
@@ -279,7 +382,7 @@ function renderProductCard(product) {
                   : null;
 
               return `
-                <div class="tier-cell ${isActive ? "active" : ""}">
+                <div class="tier-cell ${isActive ? "active" : ""}" onclick="updateCart('${product.id}', ${tier.min})" role="button" aria-label="Select pricing tier starting at ${tier.min} cartons">
                   <div class="tier-price">
                     SGD $${tierPrice.toFixed(2)}
                   </div>
@@ -582,7 +685,10 @@ async function getCurrentProfile() {
       contactName: authUser.user_metadata?.contact_name || authUser.email,
       companyName: authUser.user_metadata?.company_name || "",
       businessType: authUser.user_metadata?.business_type || "",
-      deliveryAddress: authUser.user_metadata?.delivery_address || "Singapore"
+      deliveryAddress: authUser.user_metadata?.delivery_address || "Singapore",
+      creditStatus: "none",
+      creditLimit: 0,
+      paymentTerms: "Net 30"
     };
   }
 
@@ -593,7 +699,10 @@ async function getCurrentProfile() {
     companyName: profile.company_name || "",
     businessType: profile.business_type || "",
     deliveryAddress: profile.delivery_address || "Singapore",
-    role: profile.role || "buyer"
+    role: profile.role || "buyer",
+    creditStatus: profile.credit_status || "none",
+    creditLimit: Number(profile.credit_limit ?? 0),
+    paymentTerms: profile.payment_terms || "Net 30"
   };
 }
 
@@ -670,6 +779,44 @@ function openModal() {
   if (deliveryText) {
     deliveryText.textContent =
       `Delivering to: ${user?.deliveryAddress || "Your registered address"}`;
+  }
+
+  // --- B2B Credit Terms Button Configuration ---
+  const stripeBtn = document.getElementById("modal-place-stripe");
+  const creditBtn = document.getElementById("modal-place-credit");
+  const creditWarning = document.getElementById("modal-credit-warning");
+
+  if (stripeBtn && creditBtn && creditWarning) {
+    if (user && user.creditStatus === 'approved') {
+      creditBtn.style.display = "block";
+      creditBtn.textContent = `Use B2B Credit (${user.paymentTerms}) →`;
+      
+      (async () => {
+        let spent = 0;
+        try {
+          const myOrders = await Orders.forCurrentUser();
+          const creditOrders = myOrders.filter(o => o.paymentMethod === 'credit' && o.paymentStatus === 'unpaid');
+          spent = creditOrders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+        } catch (e) {
+          console.error("Failed to load user orders for credit limit check:", e);
+        }
+        
+        const available = Math.max(user.creditLimit - spent, 0);
+        if (tp > available) {
+          creditBtn.disabled = true;
+          creditBtn.textContent = "Insufficient B2B Credit ⚠️";
+          creditWarning.style.display = "block";
+          creditWarning.textContent = `⚠️ Order total exceeds available B2B credit of SGD $${available.toFixed(2)}`;
+        } else {
+          creditBtn.disabled = false;
+          creditBtn.textContent = `Use B2B Credit (${user.paymentTerms}) →`;
+          creditWarning.style.display = "none";
+        }
+      })();
+    } else {
+      creditBtn.style.display = "none";
+      creditWarning.style.display = "none";
+    }
   }
 
   modal.classList.add("open");
@@ -781,6 +928,9 @@ function bindCheckoutButtons() {
     modalBackBtn.addEventListener("click", closeModal);
   }
 
+  const modalPlaceStripeBtn = document.getElementById("modal-place-stripe");
+  const modalPlaceCreditBtn = document.getElementById("modal-place-credit");
+
   if (modal) {
     modal.addEventListener("click", event => {
       if (event.target === modal) {
@@ -789,11 +939,12 @@ function bindCheckoutButtons() {
     });
   }
 
-  if (modalPlaceBtn) {
-    modalPlaceBtn.addEventListener("click", async () => {
-      const placeBtn = modalPlaceBtn;
-      placeBtn.disabled = true;
-      placeBtn.textContent = "Submitting…";
+  // Stripe Card checkout
+  if (modalPlaceStripeBtn) {
+    modalPlaceStripeBtn.addEventListener("click", async () => {
+      modalPlaceStripeBtn.disabled = true;
+      modalPlaceStripeBtn.textContent = "Connecting...";
+      if (modalPlaceCreditBtn) modalPlaceCreditBtn.disabled = true;
 
       try {
         const currentUser = await getCurrentProfile();
@@ -807,11 +958,9 @@ function bindCheckoutButtons() {
         const recurring = document.getElementById("recurringOrder").checked;
         const interval = document.getElementById("deliveryInterval").value;
 
-        // --- NEW BRIDGE LOGIC START ---
         if (recurring) {
           console.log("Recurring order detected. Redirecting to subscription setup...");
           
-          // Save the cart data specifically for the subscription page
           sessionStorage.setItem("subscriptionCart", JSON.stringify(
             lines.map(line => ({
               product_id: line.p.id,
@@ -822,22 +971,17 @@ function bindCheckoutButtons() {
             }))
           ));
           
-          // Save the chosen frequency
           sessionStorage.setItem("subscriptionInterval", interval);
-
-          // Redirect to your subscription page
           window.location.href = "subscriptions.html";
           return; 
         }
-        // --- NEW BRIDGE LOGIC END ---
 
-        // Normal One-Time Payment Logic
         const formattedCart = Object.entries(cart).map(([productId, quantity]) => ({
           product_id: productId,
           quantity: quantity
         }));
 
-        const res = await fetch('/api/create-checkout-session', {
+        const res = await apiFetch('/api/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -852,13 +996,82 @@ function bindCheckoutButtons() {
         } else {
           throw new Error(data.error || "Failed to get checkout URL");
         }
-
       } catch (error) {
         console.error("DETAILED ERROR:", error);
         safeToast("Order failed", error.message, "error");
       } finally {
-        placeBtn.disabled = false;
-        placeBtn.textContent = "✓ Place Order";
+        if (modalPlaceStripeBtn) {
+          modalPlaceStripeBtn.disabled = false;
+          modalPlaceStripeBtn.textContent = "Pay Online (Card) →";
+        }
+        if (modalPlaceCreditBtn) modalPlaceCreditBtn.disabled = false;
+      }
+    });
+  }
+
+  // B2B Credit terms checkout
+  if (modalPlaceCreditBtn) {
+    modalPlaceCreditBtn.addEventListener("click", async () => {
+      modalPlaceCreditBtn.disabled = true;
+      modalPlaceCreditBtn.textContent = "Placing Order...";
+      if (modalPlaceStripeBtn) modalPlaceStripeBtn.disabled = true;
+
+      try {
+        const currentUser = await getCurrentProfile();
+        if (!currentUser) {
+          safeToast("Please sign in first.", "", "error");
+          window.location.href = "login.html";
+          return;
+        }
+
+        const lines = getOrderLines();
+        const orderObj = {
+          totalCartons: totalCartons(),
+          totalAmount: totalPrice(),
+          status: 'pending',
+          notes: `Paid via B2B Credit Terms (${currentUser.paymentTerms})`,
+          paymentMethod: 'credit',
+          paymentStatus: 'unpaid',
+          creditTerms: currentUser.paymentTerms,
+          items: lines.map(line => ({
+            productId: line.p.id,
+            sku: line.p.sku,
+            name: line.p.name,
+            cartons: line.qty,
+            pricePerCarton: line.tier.price
+          }))
+        };
+
+        const savedOrder = await Orders.add(orderObj);
+        console.log("Order saved on credit terms:", savedOrder);
+
+        clearCart();
+        updateCheckoutBar();
+        closeModal();
+
+        safeToast("Order Placed", "Your B2B Credit order has been submitted successfully.", "success");
+        
+        const banner = document.getElementById("order-success");
+        if (banner) {
+          banner.style.display = "flex";
+          setTimeout(() => {
+            banner.style.display = "none";
+            window.location.href = "account.html";
+          }, 2500);
+        } else {
+          setTimeout(() => {
+            window.location.href = "account.html";
+          }, 2000);
+        }
+      } catch (error) {
+        console.error("DETAILED ERROR:", error);
+        safeToast("Order failed", error.message, "error");
+      } finally {
+        if (modalPlaceCreditBtn) {
+          modalPlaceCreditBtn.disabled = false;
+          modalPlaceCreditBtn.textContent = `Use B2B Credit (${user.paymentTerms}) →`;
+        }
+        if (modalPlaceStripeBtn) modalPlaceStripeBtn.disabled = false;
       }
     });
   }
@@ -906,10 +1119,36 @@ async function initCatalogPage() {
 }
 
 const recurringOrder = document.getElementById('recurringOrder');
+const recurringOptions = document.getElementById('recurring-options');
 const deliveryInterval = document.getElementById('deliveryInterval');
+const freqButtons = document.querySelectorAll('.freq-btn');
 
-recurringOrder.addEventListener('change', () => {
-  deliveryInterval.disabled = !recurringOrder.checked;
+if (recurringOrder && recurringOptions && deliveryInterval) {
+  recurringOrder.addEventListener('change', () => {
+    if (recurringOrder.checked) {
+      recurringOptions.style.maxHeight = '80px';
+      recurringOptions.style.marginTop = '0.5rem';
+    } else {
+      recurringOptions.style.maxHeight = '0';
+      recurringOptions.style.marginTop = '0';
+    }
+  });
+}
+
+freqButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    freqButtons.forEach(b => {
+      b.classList.remove('active');
+      b.style.fontWeight = '500';
+      b.style.border = '1.5px solid #E0D5C8';
+      b.style.background = '#fff';
+    });
+    btn.classList.add('active');
+    btn.style.fontWeight = '600';
+    btn.style.border = '1.5px solid var(--amber)';
+    btn.style.background = '#fffbeb';
+    deliveryInterval.value = btn.getAttribute('data-value');
+  });
 });
 
 initCatalogPage();

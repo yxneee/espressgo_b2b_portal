@@ -188,11 +188,11 @@ function renderProductRows() {
 
               <div class="tier-strip-labels">
                 ${p.tiers.map((t, i) => `
-                  <span style="${
+                  <span onclick="setQty('${p.id}', ${t.min})" style="${
                     i === tierIdx && qty > 0
                       ? 'color:var(--amber);font-weight:500;'
                       : ''
-                  }">
+                  }" role="button" aria-label="Set quantity to ${t.min} cartons">
                     ${
                       t.max
                         ? `${t.min}–${t.max}`
@@ -341,6 +341,7 @@ function renderSummary() {
 
   const emptySummary = document.getElementById('empty-summary');
   const placeOrderBtn = document.getElementById('place-order-btn');
+  const useCreditBtn = document.getElementById('use-credit-btn');
   const clearAllBtn = document.getElementById('clear-all-btn');
   const summaryLines = document.getElementById('summary-lines');
   const summaryTotals = document.getElementById('summary-totals');
@@ -351,7 +352,11 @@ function renderSummary() {
 
   emptySummary.style.display = hasLines ? 'none' : 'block';
   placeOrderBtn.disabled = !hasLines;
+  placeOrderBtn.textContent = "Pay Online (Card) →";
   clearAllBtn.disabled = !hasLines;
+  if (useCreditBtn) {
+    useCreditBtn.disabled = !hasLines;
+  }
 
   if (hasLines) {
     summaryLines.innerHTML = lines.map(({ p, qty, tier, subtotal }) => `
@@ -422,6 +427,32 @@ function renderSummary() {
     summaryLines.innerHTML = '';
     summaryTotals.style.display = 'none';
   }
+
+  // --- B2B Credit Limit Check & Payment Options ---
+  const creditWarning = document.getElementById("quick-order-credit-warning");
+ 
+  if (useCreditBtn && creditWarning) {
+    if (user && user.creditStatus === 'approved') {
+      useCreditBtn.style.display = "block";
+      
+      const spent = window.userSpentCredit || 0;
+      const available = Math.max(user.creditLimit - spent, 0);
+      
+      if (totalAmt > available) {
+        useCreditBtn.disabled = true;
+        useCreditBtn.textContent = "Insufficient Credit ⚠️";
+        creditWarning.style.display = "block";
+        creditWarning.textContent = `⚠️ Exceeds available credit of SGD $${available.toFixed(2)}`;
+      } else {
+        useCreditBtn.disabled = !hasLines;
+        useCreditBtn.textContent = `Use B2B Credit (${user.paymentTerms}) →`;
+        creditWarning.style.display = "none";
+      }
+    } else {
+      useCreditBtn.style.display = "none";
+      creditWarning.style.display = "none";
+    }
+  }
 }
 
 
@@ -438,8 +469,12 @@ function renderAll() {
 /* ============================================================
    Place order with Stripe Redirect
    ============================================================ */
+/* ============================================================
+   Place order with Stripe Redirect (Pay Online)
+   ============================================================ */
 document.getElementById('place-order-btn').addEventListener('click', async () => {
   const placeBtn = document.getElementById('place-order-btn');
+  const creditBtn = document.getElementById('use-credit-btn');
   const lines = getOrderLines();
 
   if (!lines.length) {
@@ -448,10 +483,10 @@ document.getElementById('place-order-btn').addEventListener('click', async () =>
   }
 
   placeBtn.disabled = true;
-  placeBtn.textContent = 'Connecting to Payment...';
+  placeBtn.textContent = 'Connecting...';
+  if (creditBtn) creditBtn.disabled = true;
 
   try {
-    // 1. Refresh/Get User Profile
     const refreshedUser = await Auth.refreshUser();
     if (!refreshedUser) {
       localStorage.setItem('redirectAfterLogin', 'quick-order.html');
@@ -459,17 +494,14 @@ document.getElementById('place-order-btn').addEventListener('click', async () =>
       return;
     }
 
-    // 2. Format the Cart data for server.js
-    // 'quantities' is the object { productId: number } used in this file
     const formattedCart = Object.entries(quantities).map(([productId, quantity]) => ({
       product_id: productId,
       quantity: quantity
     }));
 
-    console.log("Quick Order - Sending to server:", formattedCart);
+    console.log("Quick Order - Sending to Stripe:", formattedCart);
 
-    // 3. Request Stripe Session from your Node server (Port 3000)
-    const res = await fetch('/api/create-checkout-session', {
+    const res = await apiFetch('/api/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -480,29 +512,92 @@ document.getElementById('place-order-btn').addEventListener('click', async () =>
       })
     });
 
-    // 4. Handle response
     const data = await res.json();
-    console.log("Server Response:", data);
-
     if (data.url) {
-      // Clear the local quantities before leaving
-      // (Optional, or do it on the success page)
-      // quantities = {}; 
-      
-      // Redirect to Stripe
       window.location.href = data.url;
     } else {
       throw new Error(data.error || "Failed to create payment session");
     }
 
   } catch (error) {
-    console.error('Quick Order Error:', error);
+    console.error('Quick Order Stripe Error:', error);
     showToast('Order failed', error.message, 'error');
-    
-    placeBtn.disabled = false;
-    placeBtn.textContent = 'Place Order →';
+  } finally {
+    if (placeBtn) {
+      placeBtn.disabled = false;
+      placeBtn.textContent = 'Pay Online (Card) →';
+    }
+    if (creditBtn) creditBtn.disabled = false;
   }
 });
+
+/* ============================================================
+   Place order with B2B Credit
+   ============================================================ */
+const creditBtn = document.getElementById('use-credit-btn');
+if (creditBtn) {
+  creditBtn.addEventListener('click', async () => {
+    const placeBtn = document.getElementById('place-order-btn');
+    const lines = getOrderLines();
+
+    if (!lines.length) {
+      showToast('No items selected', 'Enter quantities before placing an order.', 'error');
+      return;
+    }
+
+    creditBtn.disabled = true;
+    creditBtn.textContent = 'Placing Order...';
+    if (placeBtn) placeBtn.disabled = true;
+
+    try {
+      const refreshedUser = await Auth.refreshUser();
+      if (!refreshedUser) {
+        localStorage.setItem('redirectAfterLogin', 'quick-order.html');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const orderObj = {
+        totalCartons: getTotalCartons(lines),
+        totalAmount: getTotalAmount(lines),
+        status: 'pending',
+        notes: `Paid via B2B Credit Terms (${refreshedUser.paymentTerms})`,
+        paymentMethod: 'credit',
+        paymentStatus: 'unpaid',
+        creditTerms: refreshedUser.paymentTerms,
+        items: lines.map(line => ({
+          productId: line.p.id,
+          sku: line.p.sku,
+          name: line.p.name,
+          cartons: line.qty,
+          pricePerCarton: line.tier.price
+        }))
+      };
+
+      const savedOrder = await Orders.add(orderObj);
+      console.log("Quick Order saved on credit terms:", savedOrder);
+
+      quantities = {};
+      renderAll();
+
+      showToast('Order Placed', 'Your B2B Credit order has been submitted successfully.', 'success');
+      
+      setTimeout(() => {
+        window.location.href = 'account.html';
+      }, 2000);
+
+    } catch (error) {
+      console.error('Quick Order Credit Error:', error);
+      showToast('Order failed', error.message, 'error');
+    } finally {
+      if (creditBtn) {
+        creditBtn.disabled = false;
+        creditBtn.textContent = `Use B2B Credit (${user.paymentTerms}) →`;
+      }
+      if (placeBtn) placeBtn.disabled = false;
+    }
+  });
+}
 
 
 /* ============================================================
@@ -530,8 +625,22 @@ async function initQuickOrderPage() {
 
   user = refreshedUser;
 
+  // Pre-load user orders to compute spent credit
+  window.userSpentCredit = 0;
+  if (user.creditStatus === 'approved') {
+    try {
+      const myOrders = await Orders.forCurrentUser();
+      const creditOrders = myOrders.filter(o => o.paymentMethod === 'credit' && o.paymentStatus === 'unpaid');
+      window.userSpentCredit = creditOrders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
+    } catch (e) {
+      console.error("Failed to load orders to calculate spent credit:", e);
+    }
+  }
+
   buildNav('quick-order');
   buildFooter();
+
+
 
   renderAll();
 }

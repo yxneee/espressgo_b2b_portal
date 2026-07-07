@@ -155,6 +155,11 @@
   padding: .75rem;
   text-align: center;
   transition: all .25s;
+  cursor: pointer;
+}
+.tier-cell:hover:not(.active) {
+  border-color: var(--amber);
+  background: #FFFBF7;
 }
 /* Highlights the currently active tier based on cart quantity */
 .tier-cell.active {
@@ -338,53 +343,34 @@
   animation: slideUp .25s ease;
 }
 
-/* ── Recurring order controls ───────────────────────────── */
-.recurring-order {
-  display: flex;
-  flex-direction: column;
-  gap: .75rem;
-  padding: 1rem;
-  background: #FAF8F5;
-  border: 1px solid #E8DDD0;
-  border-radius: 12px;
+/* ── Premium Switch and Selector Style ──────────────────── */
+.switch input:checked + .slider {
+  background-color: var(--amber) !important;
 }
 
-.recurring-order label {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  font-size: 14px;
-  color: var(--brown);
-  font-weight: 500;
-  cursor: pointer;
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
 }
 
-.recurring-order input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--amber);
-  cursor: pointer;
+.switch input:checked + .slider:before {
+  transform: translateX(20px);
 }
 
-.recurring-order select {
-  width: 100%;
-  padding: .7rem .9rem;
-  border: 1px solid #E0D5C8;
-  border-radius: 10px;
-  background: #fff;
-  color: var(--brown);
-  font-size: 14px;
-  outline: none;
-  transition: border-color .2s ease, box-shadow .2s ease;
+.freq-btn:hover {
+  border-color: var(--amber) !important;
+  background: #faf6f0;
 }
 
-.recurring-order select:focus {
-  border-color: var(--amber);
-  box-shadow: 0 0 0 3px rgba(200, 133, 58, .12);
-}
-
-/* Optional: hide interval until checkbox is enabled */
-.recurring-order select:disabled {
-  opacity: .5;
-  cursor: not-allowed;
+.freq-btn.active {
+  border-color: var(--amber) !important;
+  background: #fffbeb !important;
+  box-shadow: 0 0 0 3px rgba(200, 133, 58, .1);
 }

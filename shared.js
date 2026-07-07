@@ -52,6 +52,13 @@ function escapeHTML(value) {
     .replaceAll("'", '&#039;');
 }
 
+function apiFetch(path, options) {
+  const host = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? (window.location.port === '3000' ? '' : 'http://localhost:3000')
+    : '';
+  return fetch(`${host}${path}`, options);
+}
+
 
 /* ============================================================
    Auth helpers using Supabase
@@ -90,7 +97,10 @@ const Auth = {
       businessType: profile?.business_type || authUser?.user_metadata?.business_type || '',
       deliveryAddress: profile?.delivery_address || authUser?.user_metadata?.delivery_address || '',
       role: profile?.role || authUser?.user_metadata?.role || 'buyer',
-      approvalStatus: profile?.approval_status || authUser?.user_metadata?.approval_status || 'approved'
+      approvalStatus: profile?.approval_status || authUser?.user_metadata?.approval_status || 'approved',
+      creditStatus: profile?.credit_status || authUser?.user_metadata?.credit_status || 'none',
+      creditLimit: Number(profile?.credit_limit ?? 25000),
+      paymentTerms: profile?.payment_terms || authUser?.user_metadata?.payment_terms || 'Net 30'
     };
   },
 
@@ -527,7 +537,10 @@ const Orders = {
       total_cartons: Number(order.totalCartons || 0),
       total_amount: Number(order.totalAmount || 0),
       status: order.status || 'pending',
-      notes: order.notes || null
+      notes: order.notes || null,
+      payment_method: order.paymentMethod || 'stripe',
+      payment_status: order.paymentStatus || 'paid',
+      credit_terms: order.creditTerms || null
     };
 
     const { data: savedOrder, error: orderError } = await client
@@ -668,7 +681,10 @@ const Orders = {
       deliveryAddress: row.delivery_address || '',
       notes: row.notes || '',
       dateOrdered: row.created_at || row.date_ordered || null,
-      createdAt: row.created_at || null
+      createdAt: row.created_at || null,
+      paymentMethod: row.payment_method || 'stripe',
+      paymentStatus: row.payment_status || 'paid',
+      creditTerms: row.credit_terms || null
     };
   }
 };
@@ -1615,7 +1631,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         // Query serverless API endpoint
-        const response = await fetch('/api/chat', {
+        const response = await apiFetch('/api/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

@@ -439,6 +439,26 @@ async function openOrderDetailsModal(orderId) {
   document.getElementById('details-notes').textContent = order.notes || 'No special notes.';
   document.getElementById('details-total-price').textContent = `SGD $${Number(order.totalAmount || 0).toFixed(2)}`;
 
+  // Payment details
+  const methodText = order.paymentMethod === 'credit' ? `Credit (${escapeHTML(order.creditTerms || 'Net 30')})` : 'Pay Online (Card)';
+  const statusText = order.paymentStatus === 'paid' ? 'Paid ✅' : 'Unpaid ❌';
+  document.getElementById('details-payment-method').innerHTML = `<span style="font-weight:600;color:var(--brown);">${methodText}</span>`;
+  document.getElementById('details-payment-status').innerHTML = `<span class="status-pill" style="background:${order.paymentStatus === 'paid' ? '#f0fdf4;border-color:#bbf7d0;color:#15803d;' : '#fef2f2;border-color:#fecaca;color:#b91c1c;'}">${statusText}</span>`;
+
+  // Action to mark credit order as paid
+  const actionContainer = document.getElementById('details-credit-action-container');
+  if (actionContainer) {
+    if (order.paymentMethod === 'credit' && order.paymentStatus === 'unpaid') {
+      actionContainer.innerHTML = `
+        <button onclick="markOrderAsPaid('${order.id}')" class="btn-amber btn-sm" type="button" style="border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">
+          Mark as Paid
+        </button>
+      `;
+    } else {
+      actionContainer.innerHTML = '';
+    }
+  }
+
   const tbody = document.getElementById('details-items-body');
   if (tbody) {
     if (order.items && order.items.length > 0) {
@@ -502,6 +522,7 @@ window.closeOrderDetailsModal = closeOrderDetailsModal;
 
 function renderUsers() {
   filterUsersTable();
+  filterBillingUsersTable();
 }
 
 function filterUsersTable() {
@@ -526,12 +547,12 @@ function filterUsersTable() {
 
   tbody.innerHTML = filtered.map(profile => {
     const role = profile.role || 'buyer';
-    const status = profile.approval_status || 'approved';
+    const regStatus = profile.approval_status || 'approved';
 
     let statusBadge = '';
-    if (status === 'approved') {
+    if (regStatus === 'approved') {
       statusBadge = `<span class="status-pill" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d;">✅ Approved</span>`;
-    } else if (status === 'rejected') {
+    } else if (regStatus === 'rejected') {
       statusBadge = `<span class="status-pill" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c;">❌ Rejected</span>`;
     } else {
       statusBadge = `<span class="status-pill" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">🟡 Pending</span>`;
@@ -539,18 +560,18 @@ function filterUsersTable() {
 
     let actions = '';
     if (role !== 'admin') {
-      if (status === 'pending') {
+      if (regStatus === 'pending') {
         actions = `
-          <button class="btn-ghost btn-sm" onclick="setUserApproval('${profile.id}', 'approved')" style="color:#15803d;border:1px solid #bbf7d0;background:#f0fdf4;border-radius:6px;padding:3px 8px;cursor:pointer;margin-right:4px;">Approve</button>
-          <button class="btn-ghost btn-sm" onclick="setUserApproval('${profile.id}', 'rejected')" style="color:#b91c1c;border:1px solid #fecaca;background:#fef2f2;border-radius:6px;padding:3px 8px;cursor:pointer;">Reject</button>
+          <button class="btn-ghost btn-sm" onclick="setUserApproval('${profile.id}', 'approved')" style="color:#15803d;border:1px solid #bbf7d0;background:#f0fdf4;border-radius:6px;padding:3px 8px;cursor:pointer;margin-right:4px;">Approve Account</button>
+          <button class="btn-ghost btn-sm" onclick="setUserApproval('${profile.id}', 'rejected')" style="color:#b91c1c;border:1px solid #fecaca;background:#fef2f2;border-radius:6px;padding:3px 8px;cursor:pointer;">Reject Account</button>
         `;
-      } else if (status === 'approved') {
+      } else if (regStatus === 'approved') {
         actions = `
-          <button class="btn-ghost btn-sm" onclick="setUserApproval('${profile.id}', 'rejected')" style="color:#b91c1c;border:1px solid #fecaca;background:#fef2f2;border-radius:6px;padding:3px 8px;cursor:pointer;">Reject</button>
+          <button class="btn-ghost btn-sm" onclick="setUserApproval('${profile.id}', 'rejected')" style="color:#b91c1c;border:1px solid #fecaca;background:#fef2f2;border-radius:6px;padding:3px 8px;cursor:pointer;">Reject Account</button>
         `;
       } else {
         actions = `
-          <button class="btn-ghost btn-sm" onclick="setUserApproval('${profile.id}', 'approved')" style="color:#15803d;border:1px solid #bbf7d0;background:#f0fdf4;border-radius:6px;padding:3px 8px;cursor:pointer;">Approve</button>
+          <button class="btn-ghost btn-sm" onclick="setUserApproval('${profile.id}', 'approved')" style="color:#15803d;border:1px solid #bbf7d0;background:#f0fdf4;border-radius:6px;padding:3px 8px;cursor:pointer;">Approve Account</button>
         `;
       }
     } else {
@@ -564,7 +585,7 @@ function filterUsersTable() {
         <td>${escapeHTML(profile.business_type || '—')}</td>
         <td style="text-transform: capitalize;">${escapeHTML(role)}</td>
         <td>${role === 'admin' ? '<span class="status-pill" style="background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;">🛡 Admin</span>' : statusBadge}</td>
-        <td style="text-align:right;">${actions}</td>
+        <td style="text-align:right;white-space:nowrap;">${actions}</td>
       </tr>
     `;
   }).join('') || `
@@ -573,6 +594,82 @@ function filterUsersTable() {
     </tr>
   `;
 }
+
+function filterBillingUsersTable() {
+  const tbody = document.getElementById('billing-users-body');
+  if (!tbody) return;
+
+  const searchQuery = (document.getElementById('billing-users-search')?.value || '').toLowerCase().trim();
+  const statusFilter = document.getElementById('billing-users-filter-status')?.value || 'all';
+
+  let filtered = adminProfiles;
+
+  // Filter out admins from the billing list since admins don't have credit accounts
+  filtered = filtered.filter(p => p.role !== 'admin');
+
+  if (statusFilter !== 'all') {
+    filtered = filtered.filter(p => (p.credit_status || 'none') === statusFilter);
+  }
+
+  if (searchQuery) {
+    filtered = filtered.filter(p => 
+      (p.email || '').toLowerCase().includes(searchQuery) ||
+      (p.company_name || '').toLowerCase().includes(searchQuery) ||
+      (p.contact_name || '').toLowerCase().includes(searchQuery)
+    );
+  }
+
+  tbody.innerHTML = filtered.map(profile => {
+    const creditStatus = profile.credit_status || 'none';
+    const limit = profile.credit_limit || 25000;
+    const terms = profile.payment_terms || 'Net 30';
+
+    let creditBadge = '';
+    if (creditStatus === 'approved') {
+      creditBadge = `<span class="status-pill" style="background:#f0fdf4;border-color:#bbf7d0;color:#15803d;">✅ Approved</span>`;
+    } else if (creditStatus === 'applied') {
+      creditBadge = `<span class="status-pill" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">⏳ Applied</span>`;
+    } else if (creditStatus === 'rejected') {
+      creditBadge = `<span class="status-pill" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c;">❌ Rejected</span>`;
+    } else {
+      creditBadge = `<span class="status-pill" style="background:#FAF8F5;border-color:#EDE8E3;color:var(--muted);">💡 Not Applied</span>`;
+    }
+
+    let actions = '';
+    if (creditStatus === 'applied') {
+      actions = `
+        <button class="btn-ghost btn-sm" onclick="openCreditApprovalModal('${profile.id}', '${escapeHTML(profile.company_name || 'Buyer')}', ${limit}, '${escapeHTML(terms)}')" style="color:#D4850A;border:1px solid #fde68a;background:#fffbeb;border-radius:6px;padding:3px 8px;cursor:pointer;margin-right:4px;">Approve Credit</button>
+        <button class="btn-ghost btn-sm" onclick="setUserCredit('${profile.id}', 'rejected')" style="color:#b91c1c;border:1px solid #fecaca;background:#fef2f2;border-radius:6px;padding:3px 8px;cursor:pointer;">Reject Credit</button>
+      `;
+    } else if (creditStatus === 'approved') {
+      actions = `
+        <button class="btn-ghost btn-sm" onclick="openCreditApprovalModal('${profile.id}', '${escapeHTML(profile.company_name || 'Buyer')}', ${limit}, '${escapeHTML(terms)}')" style="color:#D4850A;border:1px solid #fde68a;background:#fffbeb;border-radius:6px;padding:3px 8px;cursor:pointer;margin-right:4px;">Edit Credit</button>
+        <button class="btn-ghost btn-sm" onclick="setUserCredit('${profile.id}', 'rejected')" style="color:#b91c1c;border:1px solid #fecaca;background:#fef2f2;border-radius:6px;padding:3px 8px;cursor:pointer;">Revoke Credit</button>
+      `;
+    } else {
+      actions = `
+        <button class="btn-ghost btn-sm" onclick="openCreditApprovalModal('${profile.id}', '${escapeHTML(profile.company_name || 'Buyer')}', ${limit}, '${escapeHTML(terms)}')" style="color:var(--muted);border:1px solid #EDE8E3;border-radius:6px;padding:3px 8px;cursor:pointer;">Grant Credit</button>
+      `;
+    }
+
+    return `
+      <tr>
+        <td>${escapeHTML(profile.company_name || '—')}</td>
+        <td>${escapeHTML(profile.contact_name || '—')}</td>
+        <td>${escapeHTML(profile.email || '—')}</td>
+        <td>${creditBadge}</td>
+        <td>SGD $${limit.toLocaleString()}</td>
+        <td>${escapeHTML(terms)}</td>
+        <td style="text-align:right;white-space:nowrap;">${actions}</td>
+      </tr>
+    `;
+  }).join('') || `
+    <tr>
+      <td colspan="7" style="text-align:center;padding:2rem;color:var(--muted-lt);">No B2B credit accounts found</td>
+    </tr>
+  `;
+}
+window.filterBillingUsersTable = filterBillingUsersTable;
 
 async function setUserApproval(userId, status) {
   try {
@@ -1524,5 +1621,106 @@ async function initAdminDashboard() {
 
   setAdminLoading(false);
 }
+
+// --- B2B Credit Term Admin Actions ---
+async function markOrderAsPaid(orderId) {
+  if (!confirm(`Are you sure you want to mark Order #${orderId} as Paid?`)) return;
+
+  try {
+    const { error } = await sb
+      .from('orders')
+      .update({ payment_status: 'paid' })
+      .eq('id', orderId);
+
+    if (error) throw error;
+
+    showToast('Payment Updated', `Order #${orderId} marked as paid.`);
+    
+    // Update local state
+    const localOrder = adminOrders.find(o => String(o.id) === String(orderId));
+    if (localOrder) localOrder.paymentStatus = 'paid';
+
+    // Reopen modal to update UI and refresh list
+    closeOrderDetailsModal();
+    openOrderDetailsModal(orderId);
+    renderOrders();
+    renderDashboard();
+  } catch (error) {
+    console.error('Failed to mark order as paid:', error);
+    showToast('Update Failed', error.message || 'Could not update payment status.', 'error');
+  }
+}
+
+function openCreditApprovalModal(userId, companyName, currentLimit = 25000, currentTerms = 'Net 30') {
+  document.getElementById('credit-user-id').value = userId;
+  document.getElementById('credit-company-name').value = companyName;
+  document.getElementById('credit-limit-input').value = currentLimit;
+  document.getElementById('credit-terms-input').value = currentTerms;
+  
+  document.getElementById('credit-approval-modal').classList.add('open');
+}
+
+function closeCreditModal() {
+  document.getElementById('credit-approval-modal').classList.remove('open');
+}
+
+async function saveCreditApproval(event) {
+  event.preventDefault();
+  
+  const userId = document.getElementById('credit-user-id').value;
+  const limit = Number(document.getElementById('credit-limit-input').value);
+  const terms = document.getElementById('credit-terms-input').value;
+  
+  try {
+    await setUserCredit(userId, 'approved', limit, terms);
+    closeCreditModal();
+  } catch (error) {
+    console.error("Failed to save credit approval:", error);
+  }
+}
+
+async function setUserCredit(userId, status, limit = 25000, terms = 'Net 30') {
+  try {
+    const payload = {
+      credit_status: status,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (status === 'approved') {
+      payload.credit_limit = limit;
+      payload.payment_terms = terms;
+    }
+    
+    const { error } = await sb
+      .from('profiles')
+      .update(payload)
+      .eq('id', userId);
+
+    if (error) throw error;
+
+    showToast(status === 'approved' ? 'Credit Approved' : 'Credit Status Updated', `Account credit updated to ${status}.`);
+    
+    const profileToUpdate = adminProfiles.find(p => p.id === userId);
+    if (profileToUpdate) {
+      profileToUpdate.credit_status = status;
+      if (status === 'approved') {
+        profileToUpdate.credit_limit = limit;
+        profileToUpdate.payment_terms = terms;
+      }
+    }
+
+    renderUsers();
+  } catch (error) {
+    console.error('Failed to update credit terms:', error);
+    showToast('Update Failed', error.message || 'Could not update user credit terms.', 'error');
+    throw error;
+  }
+}
+
+window.markOrderAsPaid = markOrderAsPaid;
+window.openCreditApprovalModal = openCreditApprovalModal;
+window.closeCreditModal = closeCreditModal;
+window.saveCreditApproval = saveCreditApproval;
+window.setUserCredit = setUserCredit;
 
 initAdminDashboard();

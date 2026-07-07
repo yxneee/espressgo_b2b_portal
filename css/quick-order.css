@@ -26,6 +26,8 @@
 /* ── Volume tier progress bar ────────────────────────────── */
 /* Shows how close the buyer is to the next pricing tier */
 .tier-strip-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-bottom: .35rem; }
+.tier-strip-labels span { cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; }
+.tier-strip-labels span:hover { background: #FAF8F5; color: var(--amber); }
 .tier-strip-bar    { height: 6px; background: #F0EAE4; border-radius: 9999px; overflow: hidden; }
 .tier-strip-fill   { height: 100%; background: var(--amber); border-radius: 9999px; transition: width .4s ease; }
 .tier-strip-hint   { font-size: 10px; color: #15803d; margin-top: .35rem; }

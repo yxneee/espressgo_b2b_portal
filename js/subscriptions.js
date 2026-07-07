@@ -116,7 +116,7 @@ async function createSubscription() {
         }));
 
         // 6. Call your existing Stripe endpoint (Port 3000)
-        const res = await fetch('/api/create-checkout-session', {
+        const res = await apiFetch('/api/create-checkout-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
