@@ -1,13 +1,17 @@
 /* ============================================================
    login.js — ESPRESSGO B2B Login / Register / OTP / Reset / MFA / Google OAuth
 
-   Merged version:
-   - Keeps the new full MFA flow
-   - Keeps forgot password and reset password
-   - Keeps email/phone OTP login
-   - Adds Google OAuth from old login.js
-   - Adds admin role redirect without bypassing MFA
-   - Removes old direct catalog bypass because it skips MFA
+   Features:
+   - Email/password login
+   - Buyer registration
+   - Forgot password
+   - Reset password
+   - Email OTP login
+   - Optional phone OTP login
+   - Full authenticator-app MFA flow
+   - Google OAuth support
+   - Admin role redirect
+   - MFA/AAL2 fix for password reset when MFA is enabled
 
    Final intended flow:
    1. New user signs up
@@ -18,6 +22,14 @@
    6. User logs in again
    7. If MFA exists but not verified for this session → mfa-verify.html
    8. After MFA verification → catalog.html or admin dashboard
+
+   Password reset with MFA:
+   1. User opens password reset link
+   2. User enters new password
+   3. If MFA is enabled and session is not AAL2 → mfa-verify.html
+   4. After MFA verification → login.html?reset=1
+   5. User enters new password again
+   6. Password updates successfully
 
    Depends on:
    - Supabase JS CDN
@@ -418,7 +430,7 @@ function initLoginPage() {
 
 
   /* ==========================================================
-     Final full MFA routing logic
+     MFA routing logic
      ========================================================== */
 
   async function continueAfterPrimaryLogin(fallbackProfile = {}) {
@@ -462,6 +474,22 @@ function initLoginPage() {
     }
 
     redirectAndClear(redirectTarget);
+  }
+
+
+  async function checkAal2BeforeSensitiveUpdate() {
+    const { data: aalData, error: aalError } =
+      await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+
+    if (aalError) {
+      throw aalError;
+    }
+
+    if (aalData.nextLevel === 'aal2' && aalData.currentLevel !== 'aal2') {
+      return false;
+    }
+
+    return true;
   }
 
 
@@ -744,6 +772,25 @@ function initLoginPage() {
 
   function setupExistingSessionRedirect() {
     const currentHash = window.location.hash || '';
+    const resetParams = new URLSearchParams(window.location.search);
+
+    const returningFromMfaForReset =
+      resetParams.get('reset') === '1' ||
+      localStorage.getItem('passwordRecoveryAfterMfa') === 'true';
+
+    if (returningFromMfaForReset) {
+      passwordRecoveryMode = true;
+      localStorage.removeItem('passwordRecoveryAfterMfa');
+
+      history.replaceState(
+        null,
+        '',
+        window.location.origin + window.location.pathname
+      );
+
+      showPasswordResetPanel();
+      return;
+    }
 
     if (
       currentHash.includes('type=recovery') ||
@@ -1053,6 +1100,29 @@ function initLoginPage() {
       saveBtn.textContent = 'Updating…';
 
       try {
+        const hasAal2 = await checkAal2BeforeSensitiveUpdate();
+
+        if (!hasAal2) {
+          /*
+            Supabase requires AAL2 before updating password/email
+            when MFA is enabled. Redirect to MFA verify first.
+          */
+          localStorage.setItem('passwordRecoveryAfterMfa', 'true');
+          localStorage.setItem('redirectAfterLogin', 'login.html?reset=1');
+
+          showInlineStatus(
+            'reset-status',
+            'MFA verification is required before updating your password. Redirecting…',
+            'error'
+          );
+
+          setTimeout(() => {
+            window.location.href = 'mfa-verify.html';
+          }, 800);
+
+          return;
+        }
+
         const { error } = await sb.auth.updateUser({
           password
         });
@@ -1488,8 +1558,7 @@ function initLoginPage() {
 
   /* ==========================================================
      Google OAuth
-     Merged from old login.js, but redirect returns to login.html
-     so the MFA flow can continue properly.
+     Redirects back to login page so MFA routing can continue.
      ========================================================== */
 
   function setupGoogleOAuth() {
