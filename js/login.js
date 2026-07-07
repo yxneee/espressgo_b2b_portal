@@ -12,6 +12,7 @@
    - Google OAuth support
    - Admin role redirect
    - MFA/AAL2 fix for password reset when MFA is enabled
+   - Delivery address capture during registration
 
    Final intended flow:
    1. New user signs up
@@ -318,6 +319,7 @@ function initLoginPage() {
       'contactName',
       'companyName',
       'businessType',
+      'deliveryAddress',
       'email',
       'password',
       'confirm'
@@ -1426,6 +1428,7 @@ function initLoginPage() {
       const contactName = $('f-contactName')?.value.trim() || '';
       const companyName = $('f-companyName')?.value.trim() || '';
       const businessType = $('f-businessType')?.value || '';
+      const deliveryAddress = $('f-deliveryAddress')?.value.trim() || '';
 
       let valid = true;
 
@@ -1442,6 +1445,11 @@ function initLoginPage() {
 
         if (!businessType) {
           showErr('businessType', 'Please select your business type.');
+          valid = false;
+        }
+
+        if (!deliveryAddress || deliveryAddress.length < 8) {
+          showErr('deliveryAddress', 'Enter a valid delivery address.');
           valid = false;
         }
       }
@@ -1505,7 +1513,7 @@ function initLoginPage() {
               contact_name: contactName,
               company_name: companyName,
               business_type: businessType,
-              delivery_address: ''
+              delivery_address: deliveryAddress
             }
           }
         });
