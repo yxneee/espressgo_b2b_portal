@@ -226,14 +226,6 @@
       try {
         // 1. Get the authenticated session user safely
         const { data: { user }, error: authError } = await sb.auth.getUser();
-        
-        // 🔓 INTENDED B2B PUBLIC FEATURE RESTORATION:
-        // If they are not logged in at all, let them browse the catalog publicly!
-        if (authError || !user) {
-          console.log("Public visitor detected. Granting read-only catalog access.");
-          revealCatalogContent();
-          return;
-        }
 
         // 2. If they ARE logged in, fetch their profile to check completeness
         const { data: dbProfile, error: dbError } = await sb
@@ -260,7 +252,6 @@
             if (typeof Auth !== 'undefined' && typeof Auth.refreshUser === 'function') {
               await Auth.refreshUser();
             }
-            revealCatalogContent();
           }
         } else {
           // Row missing entirely (Brand new authenticated Google signup)
@@ -272,15 +263,6 @@
         }
       } catch (error) {
         console.error('Catalog gatekeeper exception:', error);
-        revealCatalogContent(); // Fallback safety to ensure page doesn't stay hidden if a network error occurs
-      }
-
-      // Helper function to safely show the layout elements smoothly
-      function revealCatalogContent() {
-        const content = document.getElementById('main-content');
-        if (content) {
-          content.style.setProperty('display', 'block', 'important');
-        }
       }
     })();
   </script>

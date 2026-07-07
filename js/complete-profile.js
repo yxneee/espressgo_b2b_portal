@@ -19,10 +19,33 @@ document.getElementById('complete-profile-form').addEventListener('submit', asyn
     const btnText = document.getElementById('btn-text');
 
     let isValid = true;
-    if (!contactName) { isValid = false; document.getElementById('err-contactName').style.display = "flex"; }
-    if (!companyName || companyName.length < 2) { isValid = false; document.getElementById('err-companyName').style.display = "flex"; }
-    if (!businessType) { isValid = false; document.getElementById('err-businessType').style.display = "flex"; }
-    if (!address || address.length < 5) { isValid = false; document.getElementById('err-address').style.display = "flex"; }
+    if (!contactName) { 
+        isValid = false; 
+        const el = document.getElementById('err-contactName');
+        el.textContent = "⚠️ Contact name is required.";
+        el.style.display = "flex"; 
+    }
+    
+    if (!companyName || companyName.length < 2) { 
+        isValid = false; 
+        const el = document.getElementById('err-companyName');
+        el.textContent = "⚠️ Enter your company name (Minimum 2 characters).";
+        el.style.display = "flex"; 
+    }
+    
+    if (!businessType) { 
+        isValid = false; 
+        const el = document.getElementById('err-businessType');
+        el.textContent = "⚠️ Please select your business classification.";
+        el.style.display = "flex"; 
+    }
+    
+    if (!address || address.length < 5) { 
+        isValid = false; 
+        const el = document.getElementById('err-address');
+        el.textContent = "⚠️ Please provide a valid delivery address.";
+        el.style.display = "flex"; 
+    }
 
     if (!isValid) return;
 
