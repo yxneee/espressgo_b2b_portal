@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>MFA Verification — ESPRESSGO B2B Wholesale Portal</title>
+
+  <meta
+    name="description"
+    content="Verify your ESPRESSGO B2B account using multi-factor authentication."/>
+
+  <link rel="stylesheet" href="shared.css"/>
+</head>
+
+<body>
+
+  <main
+    class="login-wrap"
+    style="min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(420px,540px);background:var(--sand);">
+
+    <section
+      style="background:var(--brown);color:var(--cream);padding:4rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;">
+
+      <div style="position:relative;z-index:1;">
+
+        <a
+          href="catalog.html"
+          style="display:inline-flex;align-items:center;gap:.5rem;color:var(--cream);text-decoration:none;margin-bottom:3rem;">
+
+          <div
+            style="width:48px;height:48px;border-radius:14px;background:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:700;">
+            E
+          </div>
+
+          <div>
+            <div style="font-weight:700;letter-spacing:.2em;">
+              ESPRESSGO
+            </div>
+
+            <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#A98B68;">
+              B2B Wholesale Portal
+            </div>
+          </div>
+
+        </a>
+
+        <h1 style="font-size:3rem;line-height:1.1;margin:0 0 1rem;">
+          One more security step.
+        </h1>
+
+        <p style="max-width:430px;color:#C6A27C;line-height:1.65;font-size:1.05rem;">
+          Enter the code from your authenticator app to complete your secure login.
+        </p>
+
+      </div>
+
+      <div style="position:relative;z-index:1;display:flex;flex-direction:column;gap:.8rem;color:#A98B68;">
+        <div>✅ Password verified</div>
+        <div>🔐 MFA code required</div>
+        <div>☕ Secure wholesale access</div>
+      </div>
+
+      <div
+        style="position:absolute;width:380px;height:380px;border-radius:999px;background:rgba(255,255,255,.04);right:-120px;top:-80px;">
+      </div>
+
+      <div
+        style="position:absolute;width:260px;height:260px;border-radius:999px;background:rgba(255,255,255,.04);left:-90px;bottom:80px;">
+      </div>
+
+    </section>
+
+    <section
+      style="display:flex;align-items:center;justify-content:center;padding:2rem;">
+
+      <div style="width:100%;max-width:420px;">
+
+        <a
+          href="login.html"
+          style="display:inline-flex;align-items:center;gap:.5rem;color:var(--brown-lt);text-decoration:none;margin-bottom:2rem;">
+          ← Back to login
+        </a>
+
+        <div
+          class="card"
+          style="padding:1.5rem;border-radius:24px;">
+
+          <div style="margin-bottom:1.25rem;">
+
+            <div
+              style="width:48px;height:48px;border-radius:16px;background:#FEF3E2;color:var(--amber);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1rem;">
+              🔐
+            </div>
+
+            <h1 style="margin:0;color:var(--brown);font-size:1.75rem;">
+              Verify MFA
+            </h1>
+
+            <p style="margin:.45rem 0 0;color:var(--muted);font-size:13px;line-height:1.55;">
+              Enter the 6-digit code from your authenticator app.
+            </p>
+
+          </div>
+
+          <div
+            id="mfa-alert"
+            style="display:none;margin-bottom:1rem;padding:.75rem 1rem;border-radius:14px;font-size:13px;">
+          </div>
+
+          <div class="field">
+            <label for="mfa-code">
+              Authenticator Code
+            </label>
+
+            <input
+              id="mfa-code"
+              class="input"
+              inputmode="numeric"
+              maxlength="6"
+              placeholder="123456"
+              autocomplete="one-time-code"/>
+          </div>
+
+          <button
+            id="verify-mfa-btn"
+            class="btn-dark btn-full"
+            type="button">
+            Verify & Continue
+          </button>
+
+          <button
+            id="signout-btn"
+            class="btn-ghost btn-full"
+            type="button"
+            style="margin-top:.6rem;">
+            Sign Out
+          </button>
+
+          <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:1rem;line-height:1.5;">
+            Open your authenticator app and use the newest code shown for ESPRESSGO.
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="shared.js"></script>
+  <script src="js/mfa-verify.js"></script>
+
+</body>
+</html>
