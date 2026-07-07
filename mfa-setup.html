@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>MFA Setup — ESPRESSGO B2B Wholesale Portal</title>
+
+  <meta
+    name="description"
+    content="Set up multi-factor authentication for your ESPRESSGO B2B account."/>
+
+  <link rel="stylesheet" href="shared.css"/>
+</head>
+
+<body>
+
+  <div id="nav-placeholder"></div>
+
+  <main class="page-wrap" id="main-content">
+
+    <section
+      class="hero"
+      aria-labelledby="mfa-setup-heading"
+      style="margin-bottom:1.5rem;">
+
+      <div class="hero-inner">
+
+        <div class="hero-badge">
+          🔐 Account Security
+        </div>
+
+        <h1 id="mfa-setup-heading">
+          Set up authenticator app 2FA.
+        </h1>
+
+        <p>
+          Add an extra layer of security to your ESPRESSGO B2B account using a 6-digit authenticator app code.
+        </p>
+
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;">
+          <span class="chip">Google Authenticator</span>
+          <span class="chip">Microsoft Authenticator</span>
+          <span class="chip">2FAS / Authy</span>
+        </div>
+
+      </div>
+    </section>
+
+    <section
+      style="max-width:980px;margin:0 auto 2rem;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);gap:1rem;align-items:start;">
+
+      <div
+        class="card"
+        style="padding:1.25rem;border-radius:22px;">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;">
+
+          <div>
+            <h2 style="margin:0;color:var(--brown);font-size:1.35rem;">
+              Authenticator App Setup
+            </h2>
+
+            <p style="margin:.35rem 0 0;color:var(--muted);font-size:13px;">
+              Scan the QR code, then enter the 6-digit code from your app.
+            </p>
+          </div>
+
+          <span
+            id="mfa-aal-badge"
+            style="font-size:11px;padding:.3rem .65rem;border-radius:999px;background:#FEF3E2;color:var(--amber);border:1px solid #F3D6AA;">
+            Checking…
+          </span>
+
+        </div>
+
+        <div
+          id="mfa-alert"
+          style="display:none;margin-bottom:1rem;padding:.75rem 1rem;border-radius:14px;font-size:13px;">
+        </div>
+
+        <div
+          id="existing-factor-box"
+          style="display:none;margin-bottom:1rem;padding:.85rem 1rem;border-radius:16px;background:#F0FDF4;border:1px solid #BBF7D0;color:#166534;font-size:13px;">
+        </div>
+
+        <button
+          id="start-enroll-btn"
+          class="btn-amber btn-full"
+          type="button">
+          Start MFA Setup
+        </button>
+
+        <div
+          id="enroll-panel"
+          style="display:none;margin-top:1.25rem;">
+
+          <div style="display:grid;grid-template-columns:220px minmax(0,1fr);gap:1rem;align-items:center;">
+
+            <div
+              style="background:#fff;border:1px solid #EDE8E3;border-radius:18px;padding:1rem;display:flex;align-items:center;justify-content:center;min-height:220px;">
+
+              <img
+                id="qr-code-img"
+                src=""
+                alt="MFA QR code"
+                style="width:190px;height:190px;object-fit:contain;display:none;"/>
+
+              <div
+                id="qr-placeholder"
+                style="font-size:12px;color:var(--muted);text-align:center;">
+                QR code will appear here.
+              </div>
+
+            </div>
+
+            <div>
+
+              <h3 style="margin:0 0 .5rem;color:var(--brown);font-size:1rem;">
+                Step 1: Scan QR code
+              </h3>
+
+              <p style="margin:0 0 .75rem;color:var(--muted);font-size:13px;line-height:1.6;">
+                Open your authenticator app and scan the QR code. If scanning does not work, copy the manual secret below.
+              </p>
+
+              <label
+                for="manual-secret"
+                style="display:block;font-size:12px;color:var(--brown-lt);margin-bottom:.35rem;">
+                Manual Secret
+              </label>
+
+              <div
+                style="display:flex;gap:.5rem;align-items:center;">
+
+                <input
+                  id="manual-secret"
+                  class="input"
+                  type="text"
+                  readonly
+                  value=""
+                  style="font-family:monospace;font-size:12px;"/>
+
+                <button
+                  id="copy-secret-btn"
+                  class="btn-ghost"
+                  type="button"
+                  style="white-space:nowrap;">
+                  Copy
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div style="margin-top:1.25rem;">
+
+            <h3 style="margin:0 0 .5rem;color:var(--brown);font-size:1rem;">
+              Step 2: Enter authenticator code
+            </h3>
+
+            <p style="margin:0 0 .75rem;color:var(--muted);font-size:13px;">
+              Enter the 6-digit code shown in your authenticator app.
+            </p>
+
+            <div class="field">
+              <label for="mfa-code">
+                6-digit code
+              </label>
+
+              <input
+                id="mfa-code"
+                class="input"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="one-time-code"
+                placeholder="123456"/>
+            </div>
+
+            <button
+              id="verify-enroll-btn"
+              class="btn-dark btn-full"
+              type="button">
+              Verify & Enable MFA
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <aside
+        class="card"
+        style="padding:1.25rem;border-radius:22px;">
+
+        <h2 style="margin:0 0 .75rem;color:var(--brown);font-size:1.15rem;">
+          How it works
+        </h2>
+
+        <div style="display:flex;flex-direction:column;gap:.75rem;font-size:13px;color:var(--muted);line-height:1.55;">
+
+          <div>
+            <strong style="color:var(--brown);">1. Sign in normally</strong><br/>
+            Use your email and password first.
+          </div>
+
+          <div>
+            <strong style="color:var(--brown);">2. Enter MFA code</strong><br/>
+            If MFA is enabled, you must enter the code from your authenticator app.
+          </div>
+
+          <div>
+            <strong style="color:var(--brown);">3. Access portal</strong><br/>
+            After verification, your session is upgraded to MFA verified.
+          </div>
+
+        </div>
+
+        <div style="height:1px;background:#F0EAE4;margin:1rem 0;"></div>
+
+        <a href="account.html" class="btn-ghost btn-full" style="text-align:center;">
+          Back to Account
+        </a>
+
+      </aside>
+
+    </section>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="shared.js"></script>
+  <script src="js/mfa-setup.js"></script>
+
+</body>
+</html>
