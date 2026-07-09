@@ -129,6 +129,7 @@ function normaliseProduct(row, tierRows = []) {
     labelColor: row.label_color || "#FFF7ED",
     active: row.active === true,
     comingSoonHint: row.coming_soon_hint || "Coming soon",
+    imageUrl: row.image_url || "",
 
     tiers: tierRows.length
       ? tierRows.map(tier => ({
@@ -307,10 +308,11 @@ function renderProductCard(product) {
   const activeTier = safeGetActiveTier(product.tiers, qty);
   const activeTierIdx = product.tiers.findIndex(tier => tier.min === activeTier.min);
 
-  const productImage =
-    typeof pouchSVG === "function"
+  const productImage = product.imageUrl
+    ? `<img src="${safeEscape(product.imageUrl)}" alt="${safeEscape(product.name)}" class="product-image-img" style="width:100%; height:100%; object-fit:contain; padding:1.5rem; box-sizing:border-box;" />`
+    : (typeof pouchSVG === "function"
       ? pouchSVG(product, 130)
-      : `<div style="font-size:3rem;">☕</div>`;
+      : `<div style="font-size:3rem;">☕</div>`);
 
   return `
     <div class="product-card" role="listitem">
@@ -582,10 +584,11 @@ function renderComingSoon() {
   section.style.display = "block";
 
   grid.innerHTML = comingSoon.map(product => {
-    const image =
-      typeof pouchSVG === "function"
+    const image = product.imageUrl
+      ? `<img src="${safeEscape(product.imageUrl)}" alt="${safeEscape(product.name)}" class="coming-img-asset" style="width:100%; height:100%; object-fit:contain; padding:0.5rem; box-sizing:border-box; opacity:0.45;" />`
+      : (typeof pouchSVG === "function"
         ? pouchSVG(product, 72, true)
-        : `<div style="font-size:2rem;">☕</div>`;
+        : `<div style="font-size:2rem;">☕</div>`);
 
     return `
       <div class="coming-card">

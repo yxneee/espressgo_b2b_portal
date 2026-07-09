@@ -19,13 +19,110 @@
    Page state
    ============================================================ */
 
+const db = window.sb || window.supabaseClient;
+
 let user = null;
 
-const active = Products.filter(p => p.active);
-const comingSoon = Products.filter(p => !p.active);
+let active = [];
+let comingSoon = [];
 
 // Per-product quantity state: { productId: number }
 let quantities = {};
+
+
+/* ============================================================
+   Supabase product loading
+   ============================================================ */
+
+function normaliseProduct(row, tierRows = []) {
+  return {
+    id: row.id,
+    sku: row.sku || "",
+    name: row.name || "",
+    subtitle: row.subtitle || "",
+    caffeine: row.caffeine || "",
+    format: row.format || "",
+    shelfLife: row.shelf_life || "",
+    pouchColor: row.pouch_color || "#4B2E22",
+    pouchAccent: row.pouch_accent || "#C78A3B",
+    labelColor: row.label_color || "#FFF7ED",
+    active: row.active === true,
+    comingSoonHint: row.coming_soon_hint || "Coming soon",
+    imageUrl: row.image_url || "",
+
+    tiers: tierRows.length
+      ? tierRows.map(tier => ({
+          min: Number(tier.min_quantity),
+          max: tier.max_quantity === null ? null : Number(tier.max_quantity),
+          price: Number(tier.price)
+        }))
+      : [
+          {
+            min: 1,
+            max: null,
+            price: 0
+          }
+        ]
+  };
+}
+
+
+async function loadProductsFromSupabase() {
+  if (!db) {
+    throw new Error("Supabase client is not available.");
+  }
+
+  const { data: productsData, error: productsError } = await db
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  if (productsError) {
+    throw productsError;
+  }
+
+  const { data: tiersData, error: tiersError } = await db
+    .from("product_tiers")
+    .select("*")
+    .order("min_quantity", { ascending: true });
+
+  if (tiersError) {
+    throw tiersError;
+  }
+
+  const tiersByProduct = {};
+
+  (tiersData || []).forEach(tier => {
+    if (!tiersByProduct[tier.product_id]) {
+      tiersByProduct[tier.product_id] = [];
+    }
+
+    tiersByProduct[tier.product_id].push(tier);
+  });
+
+  const catalogProducts = (productsData || []).map(product => {
+    return normaliseProduct(product, tiersByProduct[product.id] || []);
+  });
+
+  active = catalogProducts.filter(product => product.active);
+  comingSoon = catalogProducts.filter(product => !product.active);
+
+  console.log("Products loaded dynamically from Supabase for Quick Order:", catalogProducts);
+}
+
+
+function loadFallbackProducts() {
+  if (typeof Products === "undefined") {
+    active = [];
+    comingSoon = [];
+    return;
+  }
+
+  active = Products.filter(product => product.active);
+  comingSoon = Products.filter(product => !product.active);
+
+  console.warn("Using fallback Products from shared.js in Quick Order");
+}
 
 
 /* ============================================================
@@ -150,8 +247,11 @@ function renderProductRows() {
 
             <div
               class="product-row-icon"
-              style="background:${p.pouchColor}22;">
-              ${miniPouchSVG(p.pouchColor, p.pouchAccent, 28)}
+              style="background:${p.pouchColor || '#C8580A'}22;">
+              ${p.imageUrl
+                ? `<img src="${escapeHTML(p.imageUrl)}" alt="${escapeHTML(p.name)}" class="product-row-icon-img" style="width:100%; height:100%; object-fit:contain; border-radius:8px; padding:2px; box-sizing:border-box;" />`
+                : miniPouchSVG(p.pouchColor || '#C8580A', p.pouchAccent || '#8B3A00', 28)
+              }
             </div>
 
             <div style="flex:1;min-width:0;">
@@ -289,8 +389,11 @@ function renderProductRows() {
 
           <div
             class="product-row-icon"
-            style="background:${p.pouchColor}22;">
-            ${miniPouchSVG(p.pouchColor, p.pouchAccent, 28)}
+            style="background:${p.pouchColor || '#C8580A'}22; opacity:0.5;">
+            ${p.imageUrl
+              ? `<img src="${escapeHTML(p.imageUrl)}" alt="${escapeHTML(p.name)}" class="product-row-icon-img" style="width:100%; height:100%; object-fit:contain; border-radius:8px; padding:2px; box-sizing:border-box;" />`
+              : miniPouchSVG(p.pouchColor || '#C8580A', p.pouchAccent || '#8B3A00', 28)
+            }
           </div>
 
           <div style="flex:1;min-width:0;">
@@ -640,7 +743,19 @@ async function initQuickOrderPage() {
   buildNav('quick-order');
   buildFooter();
 
-
+  try {
+    await loadProductsFromSupabase();
+  } catch (error) {
+    console.error("Failed to load products from Supabase for Quick Order:", error.message);
+    if (typeof showToast === "function") {
+      showToast(
+        "Could not load Supabase products",
+        "Using local product data for now.",
+        "error"
+      );
+    }
+    loadFallbackProducts();
+  }
 
   renderAll();
 }
