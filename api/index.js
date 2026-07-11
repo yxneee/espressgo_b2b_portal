@@ -84,6 +84,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Add this temporary test route
+app.get('/api/webhook', (req, res) => {
+  res.send('Webhook path is visible! Use POST to send data.');
+});
+
 // Basic check routes
 app.get('/', (req, res) => res.send('ESPRESSGO API Online'));
 app.get('/api', (req, res) => res.send('API Server is Online'));
