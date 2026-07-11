@@ -58,6 +58,8 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: "No valid products were found in your cart" });
     }
 
+    const totalCartons = cart.reduce((sum, item) => sum + item.quantity, 0); // Calculate total
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -66,6 +68,7 @@ module.exports = async (req, res) => {
       cancel_url: `${process.env.BASE_URL}/catalog.html`,
       metadata: {
         profile_id: profile?.id || 'guest',
+        total_cartons_str: String(totalCartons), // NEW
         order_items_mini: cart.map(i => `${i.product_id}:${i.quantity}`).join(',')
       },
     });

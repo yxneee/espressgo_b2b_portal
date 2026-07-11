@@ -17,7 +17,6 @@ app.post(['/webhook', '/api/webhook'], express.raw({ type: 'application/json' })
 
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    console.log("Webhook Verified. Event:", event.type);
   } catch (err) {
     console.error("Webhook Signature Error:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -28,11 +27,8 @@ app.post(['/webhook', '/api/webhook'], express.raw({ type: 'application/json' })
     const { profile_id, order_items_mini, total_cartons_str } = session.metadata;
 
     try {
-      // Manual fallback for cartons
       const itemPairs = order_items_mini.split(',');
-      let calcCartons = 0;
-      itemPairs.forEach(p => calcCartons += parseInt(p.split(':')[1]) || 0);
-      const finalCartons = parseInt(total_cartons_str) || calcCartons || 1;
+      const finalCartons = parseInt(total_cartons_str) || 0;
 
       // 1. Fetch Profile
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', profile_id).single();
@@ -51,24 +47,40 @@ app.post(['/webhook', '/api/webhook'], express.raw({ type: 'application/json' })
         payment_status: 'paid'
       }]).select().single();
 
-      if (orderError) throw orderError;
+      if (orderError) throw new Error(`Order Insert Error: ${orderError.message}`);
 
       // 3. Insert Items
       for (const pair of itemPairs) {
         const [prodId, qty] = pair.split(':');
+        const quantity = parseInt(qty);
+
+        // Fetch product info
         const { data: p } = await supabase.from('products').select('*').eq('id', prodId).single();
-        await supabase.from('order_items').insert({
+        
+        // Fetch specific tier price
+        const { data: tier } = await supabase
+          .from('product_tiers')
+          .select('price')
+          .eq('product_id', prodId)
+          .lte('min_quantity', quantity)
+          .or(`max_quantity.is.null,max_quantity.gte.${quantity}`)
+          .maybeSingle(); // Use maybeSingle to avoid errors if tier not found
+
+        const { error: itemError } = await supabase.from('order_items').insert({
           order_id: order.id,
           product_id: prodId,
           sku: p?.sku || 'N/A',
           name: p?.name || 'Product',
-          cartons: parseInt(qty),
-          price_per_carton: p?.tiers ? p.tiers[0].price : (session.amount_total / 100 / itemPairs.length)
+          cartons: quantity,
+          price_per_carton: tier?.price || (session.amount_total / 100 / itemPairs.length)
         });
+
+        if (itemError) console.error("Item Insert Error:", itemError.message);
       }
-      console.log("ORDER SAVED TO SUPABASE SUCCESSFULLY");
+
+      console.log("SUCCESS: Order and items saved to Supabase.");
     } catch (err) {
-      console.error("SUPABASE ERROR:", err.message);
+      console.error("WEBHOOK LOGIC CRASH:", err.message);
     }
   }
   res.json({ received: true });
