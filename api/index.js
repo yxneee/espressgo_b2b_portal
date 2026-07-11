@@ -42,7 +42,7 @@ app.post(['/api/webhook', '/webhook'], express.raw({ type: 'application/json' })
                   contact_name: profile?.contact_name || 'N/A',
                   business_type: profile?.business_type,
                   delivery_address: profile?.delivery_address || 'Singapore',
-                  total_cartons: parseInt(total_cartons_str) || 0, // Convert string back to number for DB
+                  total_cartons: parseInt(total_cartons_str || session.metadata.total_cartons || 0),// Convert string back to number for DB
                   total_amount: session.amount_total / 100,
                   status: 'processing',
                   payment_method: 'stripe', // Track this for the new admin site
@@ -75,7 +75,6 @@ app.post(['/api/webhook', '/webhook'], express.raw({ type: 'application/json' })
   }
   res.json({ received: true });
 });
-
 
 // standard middleware
 app.use(cors({
