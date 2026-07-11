@@ -20,58 +20,65 @@ app.post(['/api/webhook', '/webhook'], express.raw({ type: 'application/json' })
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error("❌ Webhook Error:", err.message);
+    console.error("Webhook Signature Error:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      // FIX: Extracting the metadata we sent during checkout
-      const { profile_id, order_items_mini, total_cartons_str } = session.metadata;
+    const session = event.data.object;
+    const { profile_id, order_items_mini } = session.metadata;
 
-      try {
-          // 1. Fetch the full profile
-          const { data: profile } = await supabase.from('profiles').select('*').eq('id', profile_id).single();
+    console.log("Processing order for Profile:", profile_id);
 
-          // 2. Save the Order Header
-          const { data: order, error: orderError } = await supabase
-              .from('orders')
-              .insert([{
-                  profile_id: profile_id,
-                  company: profile?.company_name || 'N/A',
-                  contact_name: profile?.contact_name || 'N/A',
-                  business_type: profile?.business_type,
-                  delivery_address: profile?.delivery_address || 'Singapore',
-                  total_cartons: parseInt(total_cartons_str || session.metadata.total_cartons || 0),// Convert string back to number for DB
-                  total_amount: session.amount_total / 100,
-                  status: 'processing',
-                  payment_method: 'stripe', // Track this for the new admin site
-                  payment_status: 'paid'
-              }])
-              .select().single();
+    try {
+      // FIX: Calculate total cartons from the items string if metadata is missing
+      const itemPairs = order_items_mini.split(',');
+      let calculatedCartons = 0;
+      itemPairs.forEach(pair => {
+        const [_, qty] = pair.split(':');
+        calculatedCartons += parseInt(qty) || 0;
+      });
 
-          if (orderError) throw orderError;
+      // 1. Fetch profile
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', profile_id).single();
 
-          // 3. Save the individual items
-          const itemPairs = order_items_mini.split(',');
-          for (const pair of itemPairs) {
-              const [prodId, qty] = pair.split(':');
-              const { data: p } = await supabase.from('products').select('*').eq('id', prodId).single();
+      // 2. Save Order Header
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([{
+          profile_id: profile_id,
+          company: profile?.company_name || 'N/A',
+          contact_name: profile?.contact_name || 'N/A',
+          business_type: profile?.business_type || 'B2B',
+          delivery_address: profile?.delivery_address || 'Singapore',
+          total_cartons: calculatedCartons, // Uses the number we just calculated
+          total_amount: session.amount_total / 100,
+          status: 'processing',
+          payment_method: 'stripe',
+          payment_status: 'paid'
+        }])
+        .select().single();
 
-              await supabase.from('order_items').insert({
-                  order_id: order.id,
-                  product_id: prodId,
-                  sku: p?.sku || 'N/A',
-                  name: p?.name || 'Product',
-                  cartons: parseInt(qty),
-                  price_per_carton: p?.tiers ? p.tiers[0].price : (session.amount_total / 100 / itemPairs.length)
-              });
-          }
-          console.log('✅ SUCCESS: Order saved to database');
-      } catch (dbErr) {
-          console.error("❌ DATABASE SAVE FAILED:", dbErr.message);
-          // Return 200 so Stripe stops retrying, but we log the error
+      if (orderError) throw orderError;
+
+      // 3. Save Items
+      for (const pair of itemPairs) {
+        const [prodId, qty] = pair.split(':');
+        const { data: p } = await supabase.from('products').select('*').eq('id', prodId).single();
+
+        await supabase.from('order_items').insert({
+          order_id: order.id,
+          product_id: prodId,
+          sku: p?.sku || 'N/A',
+          name: p?.name || 'Product',
+          cartons: parseInt(qty),
+          price_per_carton: p?.tiers ? p.tiers[0].price : (session.amount_total / 100 / itemPairs.length)
+        });
       }
+      console.log('SUCCESS: Order saved to database');
+    } catch (dbErr) {
+      console.error("DATABASE SAVE FAILED:", dbErr.message);
+    }
   }
   res.json({ received: true });
 });
