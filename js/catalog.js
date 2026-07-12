@@ -281,8 +281,14 @@ function renderProductCard(product) {
   const productImage = product.imageUrl
     ? `<img src="${safeEscape(product.imageUrl)}" alt="${safeEscape(product.name)}" class="product-image-img" style="width:100%; height:100%; object-fit:contain; padding:1.5rem; box-sizing:border-box;" />`
     : (typeof pouchSVG === "function"
-      ? pouchSVG(product, 130)
+      ? pouchSVG(product, 120)
       : `<div style="font-size:3rem;">☕</div>`);
+
+  const minPrice = Number(product.tiers[product.tiers.length - 1]?.price || 0).toFixed(2);
+  const maxPrice = Number(product.tiers[0]?.price || 0).toFixed(2);
+  const priceDisplay = minPrice === maxPrice 
+    ? `SGD $${maxPrice}` 
+    : `SGD $${minPrice} - $${maxPrice}`;
 
   return `
     <div class="product-card" role="listitem">
@@ -296,17 +302,23 @@ function renderProductCard(product) {
             ${product.pouchColor}CC
           );
         ">
+        <span class="product-badge">Case of 50 Pouches</span>
         ${productImage}
       </div>
 
       <div class="product-content">
 
-        <div class="product-name">
-          ${safeEscape(product.name)}
+        <div class="product-header-inline">
+          <div class="product-name">
+            ${safeEscape(product.name)}
+          </div>
+          <div class="product-sku-badge">
+            SKU: ${safeEscape(product.sku)}
+          </div>
         </div>
 
         <div class="product-price">
-          SGD $${Number(product.tiers[0]?.price || 0).toFixed(2)}
+          ${priceDisplay}
           <span>/ carton</span>
         </div>
 
@@ -316,9 +328,9 @@ function renderProductCard(product) {
 
         <div class="specs">
           ${[
-            product.caffeine,
-            product.format,
-            product.shelfLife
+            product.caffeine ? `⚡ ${product.caffeine}` : null,
+            product.format ? `📦 ${product.format}` : null,
+            product.shelfLife ? `🕐 ${product.shelfLife}` : null
           ].filter(Boolean).map(spec => `
             <span class="spec">${safeEscape(spec)}</span>
           `).join("")}
