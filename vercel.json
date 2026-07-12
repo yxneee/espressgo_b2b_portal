@@ -4,6 +4,6 @@
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/chat.js" },
     { "source": "/api/create-checkout-session", "destination": "/api/create-checkout-session.js" },
-    { "source": "/api/webhook", "destination": "/api/index.js" }
+    { "source": "/api/webhook", "destination": "/api/webhook.js" }
   ]
 }
