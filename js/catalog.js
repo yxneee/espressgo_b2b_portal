@@ -216,76 +216,46 @@ function getProductDetailHTML(product) {
   const name = (product.name || '').toLowerCase();
   const id = (product.id || '').toLowerCase();
   
+  let ingredients = '';
+  let nutrition = '';
+  let benefits = '';
+
   if (name.includes('original') || name.includes('classic') || id.includes('original')) {
-    return `
-      <div class="drawer-content" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; border-top:1px solid #FAF8F5; padding-top:0.75rem; margin-top:0.75rem; text-align: left;">
-        <div>
-          <strong style="color:var(--brown); font-size:11px;">🌱 Ingredients</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Arabica Soluble Coffee, Erythritol, Konnyaku Jelly, Monk Fruit Extract.</p>
-        </div>
-        <div>
-          <strong style="color:var(--brown); font-size:11px;">📊 Nutrition (Per 50g)</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Energy: 12 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~70mg</p>
-        </div>
-        <div style="grid-column: span 2;">
-          <strong style="color:var(--brown); font-size:11px;">💡 Key Benefits</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Retort-sterilised for a 9-month shelf life. Squeeze directly from the pocket-sized pouch. Zero sugar & vegan-friendly.</p>
-        </div>
-      </div>
-    `;
+    ingredients = 'Arabica Soluble Coffee, Erythritol, Konnyaku Jelly, Monk Fruit Extract.';
+    nutrition = 'Energy: 12 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~70mg';
+    benefits = 'Retort-sterilised for a 9-month shelf life. Squeeze directly from the pocket-sized pouch. Zero sugar & vegan-friendly.';
   } else if (name.includes('oat') || id.includes('oat')) {
-    return `
-      <div class="drawer-content" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; border-top:1px solid #FAF8F5; padding-top:0.75rem; margin-top:0.75rem; text-align: left;">
-        <div>
-          <strong style="color:var(--brown); font-size:11px;">🌱 Ingredients</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Arabica Soluble Coffee, Oat Milk Powder, Erythritol, Konnyaku Jelly, Monk Fruit Extract.</p>
-        </div>
-        <div>
-          <strong style="color:var(--brown); font-size:11px;">📊 Nutrition (Per 50g)</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Energy: 28 kcal · Carbs: 12g · Sugar: 1g · Fat: 0.5g · Caffeine: ~60mg</p>
-        </div>
-        <div style="grid-column: span 2;">
-          <strong style="color:var(--brown); font-size:11px;">💡 Key Benefits</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Rich, creamy oat milk blend. Retort-sterilised for a 10-month shelf life. No dairy, lactose-free, and vegan-friendly.</p>
-        </div>
-      </div>
-    `;
+    ingredients = 'Arabica Soluble Coffee, Oat Milk Powder, Erythritol, Konnyaku Jelly, Monk Fruit Extract.';
+    nutrition = 'Energy: 28 kcal · Carbs: 12g · Sugar: 1g · Fat: 0.5g · Caffeine: ~60mg';
+    benefits = 'Rich, creamy oat milk blend. Retort-sterilised for a 10-month shelf life. No dairy, lactose-free, and vegan-friendly.';
   } else if (name.includes('matcha') || id.includes('matcha')) {
-    return `
-      <div class="drawer-content" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; border-top:1px solid #FAF8F5; padding-top:0.75rem; margin-top:0.75rem; text-align: left;">
-        <div>
-          <strong style="color:var(--brown); font-size:11px;">🌱 Ingredients</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Japanese Uji Matcha, Green Tea Extract, Erythritol, Konnyaku Jelly, Monk Fruit.</p>
-        </div>
-        <div>
-          <strong style="color:var(--brown); font-size:11px;">📊 Nutrition (Per 50g)</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Energy: 15 kcal · Carbs: 9g · Sugar: 0g · Fat: 0g · Caffeine: ~40mg</p>
-        </div>
-        <div style="grid-column: span 2;">
-          <strong style="color:var(--brown); font-size:11px;">💡 Key Benefits</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">L-Theanine & caffeine combo for calm, focused energy. Pocket-sized pouch, squeeze directly.</p>
-        </div>
-      </div>
-    `;
+    ingredients = 'Japanese Uji Matcha, Green Tea Extract, Erythritol, Konnyaku Jelly, Monk Fruit.';
+    nutrition = 'Energy: 15 kcal · Carbs: 9g · Sugar: 0g · Fat: 0g · Caffeine: ~40mg';
+    benefits = 'L-Theanine & caffeine combo for calm, focused energy. Pocket-sized pouch, squeeze directly.';
   } else if (name.includes('decaf') || id.includes('decaf')) {
-    return `
-      <div class="drawer-content" style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; border-top:1px solid #FAF8F5; padding-top:0.75rem; margin-top:0.75rem; text-align: left;">
-        <div>
-          <strong style="color:var(--brown); font-size:11px;">🌱 Ingredients</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Swiss Water Decaf Soluble Arabica Coffee, Erythritol, Konnyaku Jelly, Monk Fruit.</p>
-        </div>
-        <div>
-          <strong style="color:var(--brown); font-size:11px;">📊 Nutrition (Per 50g)</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Energy: 10 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~5mg</p>
-        </div>
-        <div style="grid-column: span 2;">
-          <strong style="color:var(--brown); font-size:11px;">💡 Key Benefits</strong>
-          <p style="margin:2px 0 0; color:var(--muted); font-size:11px; line-height:1.3;">Decaffeinated using 100% chemical-free Swiss Water process. Safe for late-night coffee rituals.</p>
-        </div>
-      </div>
-    `;
+    ingredients = 'Swiss Water Decaf Soluble Arabica Coffee, Erythritol, Konnyaku Jelly, Monk Fruit.';
+    nutrition = 'Energy: 10 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~5mg';
+    benefits = 'Decaffeinated using 100% chemical-free Swiss Water process. Safe for late-night coffee rituals.';
+  } else {
+    return '';
   }
-  return '';
+
+  return `
+    <div class="drawer-content">
+      <div class="drawer-section">
+        <strong class="drawer-section-title">🌱 Ingredients</strong>
+        <p class="drawer-section-body">${ingredients}</p>
+      </div>
+      <div class="drawer-section">
+        <strong class="drawer-section-title">📊 Nutrition (Per 50g)</strong>
+        <p class="drawer-section-body">${nutrition}</p>
+      </div>
+      <div class="drawer-section full-width">
+        <strong class="drawer-section-title">💡 Key Benefits</strong>
+        <p class="drawer-section-body">${benefits}</p>
+      </div>
+    </div>
+  `;
 }
 
 function toggleProductDetails(productId) {
@@ -356,12 +326,12 @@ function renderProductCard(product) {
 
         <!-- Expandable details block -->
         <div style="margin-top:0.25rem;">
-          <button type="button" class="details-toggle-btn" onclick="toggleProductDetails('${product.id}')" style="background:none; border:none; padding:0.25rem 0; font-size:12px; color:var(--amber); font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px; outline:none;">
+          <button type="button" class="details-toggle-btn" onclick="toggleProductDetails('${product.id}')">
             <span>View Pouch Details</span>
-            <span class="chevron" id="chevron-${product.id}" style="font-size:8px;">▼</span>
+            <span class="chevron" id="chevron-${product.id}">▼</span>
           </button>
           
-          <div id="details-${product.id}" style="max-height:0px; overflow:hidden; transition:max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-sizing:border-box;">
+          <div id="details-${product.id}" class="details-drawer">
             ${getProductDetailHTML(product)}
           </div>
         </div>

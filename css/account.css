@@ -96,11 +96,13 @@
   border: 1px solid #E8DDD0;
   border-radius: 16px;
   cursor: pointer;
-  transition: all .2s;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
 }
 .quick-link:hover {
-  border-color: rgba(200, 133, 58, .4);
+  transform: translateY(-3px);
+  border-color: rgba(200, 133, 58, 0.4);
   background: #FAF8F5;
+  box-shadow: 0 10px 24px rgba(44, 24, 16, 0.05);
 }
 
 
@@ -120,12 +122,13 @@
   border-radius: 16px;
   padding: 1.25rem;
   margin-bottom: 1rem;
-  transition: all .2s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .subscription-card:hover {
-  border-color: rgba(200, 133, 58, .4);
-  box-shadow: 0 6px 18px rgba(0,0,0,.04);
+  transform: translateY(-3px);
+  border-color: rgba(200, 133, 58, 0.4);
+  box-shadow: 0 12px 24px rgba(44, 24, 16, 0.05);
 }
 
 .subscription-card h3 {

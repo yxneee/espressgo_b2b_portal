@@ -5,8 +5,20 @@
 
 /* ── Stats grid (4 key product numbers) ─────────────────── */
 .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: .75rem; margin-bottom: 1.5rem; }
-.stat-card  { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; text-align: center; cursor: default; transition: transform .2s; }
-.stat-card:hover { transform: translateY(-3px); }
+.stat-card  {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  text-align: center;
+  cursor: default;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.stat-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(200, 133, 58, 0.4);
+  box-shadow: 0 12px 24px rgba(44, 24, 16, 0.06);
+}
 .stat-num   { font-size: 2rem; color: var(--brown); margin-bottom: .2rem; }
 .stat-label { font-size: 14px; color: var(--brown); }
 .stat-sub   { font-size: 11px; color: var(--muted-lt); margin-top: 2px; }
@@ -33,8 +45,23 @@
 
 /* ── Values row (icon + title + blurb) ───────────────────── */
 .values-row { display: flex; flex-wrap: wrap; gap: .75rem; }
-.value-card { display: flex; align-items: center; gap: .75rem; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: .75rem 1rem; flex: 1; min-width: 160px; transition: transform .2s; }
-.value-card:hover { transform: scale(1.03); }
+.value-card {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .75rem 1rem;
+  flex: 1;
+  min-width: 160px;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.value-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(200, 133, 58, 0.4);
+  box-shadow: 0 10px 20px rgba(44, 24, 16, 0.05);
+}
 .value-icon  { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
 .value-title { font-size: 14px; color: var(--brown); }
 .value-blurb { font-size: 11px; color: var(--muted-lt); margin-top: 2px; line-height: 1.4; }

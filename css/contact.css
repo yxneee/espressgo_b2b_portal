@@ -5,9 +5,23 @@
 
 /* ── Contact info tiles (email / location) ───────────────── */
 .contact-tiles { display: grid; grid-template-columns: repeat(2,1fr); gap: .75rem; margin-bottom: 1.5rem; }
-.contact-tile  { display: flex; align-items: center; gap: 1rem; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; cursor: default; transition: transform .2s; }
+.contact-tile  {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  cursor: default;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+}
 .contact-tile.clickable       { cursor: pointer; }
-.contact-tile.clickable:hover { transform: translateY(-2px); }
+.contact-tile.clickable:hover {
+  transform: translateY(-4px);
+  border-color: rgba(200, 133, 58, 0.4);
+  box-shadow: 0 12px 24px rgba(44, 24, 16, 0.06);
+}
 .tile-icon  { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
 .tile-label { font-size: 12px; color: var(--muted); }
 .tile-value { font-size: 14px; color: var(--brown); }
