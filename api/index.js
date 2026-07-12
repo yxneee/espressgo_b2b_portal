@@ -11,7 +11,7 @@ const supabase = createClient(
 );
 
 // --- 1. WEBHOOK (Must be first) ---
-app.post(['/webhook', '/api/webhook'], express.raw({ type: 'application/json' }), async (req, res) => {
+app.post(['/', '/webhook', '/api/webhook'], express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
 
