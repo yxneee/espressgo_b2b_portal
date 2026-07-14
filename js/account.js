@@ -1623,63 +1623,105 @@ function renderSubscriptions(subscriptions) {
 
   if (!subscriptions.length) {
     container.innerHTML = `
-      <div class="subscription-empty">
-        <div class="subscription-empty-icon">🔄</div>
-        <h3>No active subscriptions</h3>
-        <p>Set up a recurring order in the catalog to save time and ensure you never run out of stock.</p>
-        <a href="catalog.html" class="btn-dark btn-sm" style="margin-top:1.5rem; text-decoration:none; display:inline-block;">Browse Catalog</a>
+      <div style="padding:4rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:.75rem;opacity:.3;">🔄</div>
+        <div style="color:var(--brown);margin-bottom:.35rem;">No active subscriptions</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;">Set up a recurring order in the catalog to save time.</p>
+        <a href="catalog.html" class="btn-dark btn-sm">Browse Catalog →</a>
       </div>
     `;
     return;
   }
 
   container.innerHTML = `
-    <div class="subscriptions-grid-container">
+    <div class="card">
+      <div style="padding:1rem 1.5rem;border-bottom:1px solid #F0EAE4;display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:.75rem;">
+          <div style="width:32px;height:32px;background:#F5F0EB;border-radius:10px;display:flex;align-items:center;justify-content:center;">🔄</div>
+          <div>
+            <h2 style="font-size:1rem;color:var(--brown);">Recurring Deliveries</h2>
+            <p style="font-size:11px;color:var(--muted);">${subscriptions.length} subscription${subscriptions.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+      </div>
+
       ${subscriptions.map(sub => {
         const isActive = sub.status === 'active';
-        // Extract names of items for a quick summary
-        const itemSummary = sub.subscription_items?.map(i => i.name || 'Product').join(', ') || 'No items';
+        const dotColor = isActive ? '#4ade80' : '#fbbf24'; // Matches your Order dots
+        const date = new Date(sub.created_at).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
         
-        return `
-          <div class="subscription-card">
-            <div class="subscription-header">
-              <div>
-                <h3>${sub.frequency} Delivery</h3>
-                <p style="font-size:11px; margin-top:4px;">ID: #${sub.id.slice(0, 8).toUpperCase()}</p>
-              </div>
-              <div class="subscription-status ${sub.status}">
-                <span class="order-dot" style="background: currentColor;"></span>
-                ${sub.status}
-              </div>
-            </div>
+        // Calculate total amount for the subscription
+        const totalAmount = (sub.subscription_items || []).reduce((sum, item) => sum + (item.cartons * item.price_per_carton), 0);
 
-            <div class="subscription-items">
-              <div style="font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
-                Recurring Items
-              </div>
-              <!-- This matches your order-item-row style for consistency -->
-              ${(sub.subscription_items || []).map(item => `
-                <div class="subscription-item">
-                  <span class="subscription-item-name">
-                    ${item.cartons} ctn × ${item.name || 'Coffee Product'}
+        return `
+          <div class="order-row">
+            <div class="order-row-header" onclick="toggleSubscriptionDetail('${sub.id}')" role="button" id="sub-hdr-${sub.id}">
+              <div class="order-dot" style="background:${dotColor};"></div>
+              
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem;flex-wrap:wrap;">
+                  <span class="order-id" style="text-transform: capitalize;">${sub.frequency} Delivery</span>
+                  <span class="order-badge" style="background:transparent; border: 1px solid #F0EAE4; color: var(--brown-lt);">
+                    ${sub.status.toUpperCase()}
                   </span>
                 </div>
-              `).join('')}
+                <div class="order-meta">
+                  #${sub.id.slice(0,8).toUpperCase()} · Started ${date}
+                </div>
+              </div>
+
+              <div class="order-amount">
+                SGD $${totalAmount.toFixed(2)}
+              </div>
+
+              <div class="order-chevron" id="sub-chev-${sub.id}">▾</div>
             </div>
 
-            <div class="subscription-actions">
-              <button class="btn-dark btn-sm" style="flex:1;" onclick="toggleSubscription('${sub.id}', '${sub.status}')">
-                ${isActive ? '⏸ Pause' : '▶️ Resume'}
-              </button>
-              <button class="btn-ghost btn-sm" style="color: #ef4444;" onclick="cancelSubscription('${sub.id}')">
-                ✕ Cancel
-              </button>
+            <div class="order-detail" id="sub-det-${sub.id}" style="display:none; padding: 0 1.5rem 1.25rem;">
+              <div class="order-items">
+                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;">Subscription Items</div>
+                
+                ${(sub.subscription_items || []).map(item => `
+                  <div class="order-item-row">
+                    <span style="color:var(--brown);">
+                      ${item.cartons} cartons × ${item.name || 'Product'}
+                    </span>
+                    <span style="color:var(--brown-lt);">
+                      SGD $${(item.cartons * item.price_per_carton).toFixed(2)}
+                    </span>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div style="display:flex;gap:.6rem;">
+                <button onclick="toggleSubscription('${sub.id}', '${sub.status}')" class="btn-dark" style="flex:1;justify-content:center;padding:.6rem;">
+                  ${isActive ? '⏸ Pause Subscription' : '▶️ Resume Subscription'}
+                </button>
+                <button onclick="cancelSubscription('${sub.id}')" class="btn-ghost" style="padding:.6rem 1rem; color: #ef4444;">
+                  ✕ Cancel
+                </button>
+              </div>
             </div>
           </div>
         `;
       }).join('')}
     </div>
   `;
+}
+
+// Add this helper to handle the expansion (matches your toggleOrder logic)
+function toggleSubscriptionDetail(id) {
+  const detail = document.getElementById('sub-det-' + id);
+  const chevron = document.getElementById('sub-chev-' + id);
+  
+  if (!detail) return;
+  
+  const isHidden = detail.style.display === 'none';
+  detail.style.display = isHidden ? 'block' : 'none';
+  
+  if (chevron) {
+    chevron.classList.toggle('open', isHidden);
+  }
 }
 
 async function toggleSubscription(id, currentStatus) {

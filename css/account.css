@@ -116,6 +116,11 @@
    Subscriptions Tab
    ============================================================ */
 
+/* Ensure the Subscription tab content has enough padding */
+#panel-subscriptions {
+  padding-bottom: 2rem;
+}
+
 /* Container for the grid of cards */
 .subscriptions-grid-container {
   display: grid;
