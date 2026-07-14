@@ -62,17 +62,17 @@ async function initMfaVerifyPage() {
     const factor = await getVerifiedTotpFactor();
 
     if (!factor) {
-      showAlert(
-        'No verified authenticator app factor was found. Please set up MFA first.',
-        'error'
-      );
+  showAlert(
+    'No verified authenticator app factor was found. Redirecting to Catalog…',
+    'error'
+  );
 
-      setTimeout(() => {
-        window.location.href = 'mfa-setup.html';
-      }, 1500);
+  setTimeout(() => {
+    window.location.href = 'catalog.html'; // Changed from mfa-setup.html
+  }, 1500);
 
-      return;
-    }
+  return;
+}
 
     const input = document.getElementById('mfa-code');
 
@@ -225,17 +225,17 @@ async function verifyMfaCode() {
     const factor = await getVerifiedTotpFactor();
 
     if (!factor) {
-      showAlert(
-        'No verified MFA factor found. Please set up MFA first.',
-        'error'
-      );
+  showAlert(
+    'No verified authenticator app factor was found. Redirecting to Catalog…',
+    'error'
+  );
 
-      setTimeout(() => {
-        window.location.href = 'mfa-setup.html';
-      }, 1200);
+  setTimeout(() => {
+    window.location.href = 'catalog.html'; // Changed from mfa-setup.html
+  }, 1500);
 
-      return;
-    }
+  return;
+}
 
     const { data, error } = await sb.auth.mfa.challengeAndVerify({
       factorId: factor.id,

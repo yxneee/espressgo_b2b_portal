@@ -84,7 +84,7 @@ document.getElementById('complete-profile-form').addEventListener('submit', asyn
 
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         window.location.replace(isLocalhost 
-          ? window.location.origin + '/espresgo_b2b_portal/catalog.html' 
+          ? window.location.origin + '/espressgo_b2b_portal/catalog.html' 
           : window.location.origin + '/catalog.html'
         );
 

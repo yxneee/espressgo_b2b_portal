@@ -981,13 +981,22 @@ function renderProfile() {
 
         </div>
 
-        <button
-          onclick="startEdit()"
-          class="btn-ghost btn-sm"
-          type="button">
-          ✏️ Edit
-        </button>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <a
+            href="mfa-setup.html"
+            class="btn-ghost btn-sm"
+            style="text-decoration:none;display:inline-flex;align-items:center;"
+            role="button">
+            🔒 Setup 2FA
+          </a>
 
+          <button
+            onclick="startEdit()"
+            class="btn-ghost btn-sm"
+            type="button">
+            ✏️ Edit
+          </button>
+        </div>
       </div>
 
       <div style="padding:1.5rem;">

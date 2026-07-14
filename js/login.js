@@ -448,13 +448,11 @@ function initLoginPage() {
     const verifiedTotpFactor = await getVerifiedTotpFactor();
 
     /*
-      New user / user without MFA:
-      They are not allowed to catalog/admin yet.
-      Send them to MFA setup first.
+      If no MFA factor exists:
+      Bypass enforced setup and directly route to the intended page (e.g., catalog.html).
     */
     if (!verifiedTotpFactor) {
-      localStorage.setItem('redirectAfterMfaSetup', redirectTarget);
-      window.location.href = 'mfa-setup.html';
+      redirectAndClear(redirectTarget);
       return;
     }
 
