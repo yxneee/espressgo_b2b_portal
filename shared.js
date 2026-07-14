@@ -1523,16 +1523,228 @@ document.addEventListener('DOMContentLoaded', () => {
       return mockAnswer;
     }
 
+    // ── Helper: Call the chat-action backend endpoint ───────────────────────
+    async function callChatAction(payload) {
+      const currentUser = Auth.getUser();
+      const response = await apiFetch('/api/chat-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser?.id || null,
+          userProfile: currentUser || null,
+          ...payload
+        })
+      });
+      return response.json();
+    }
+
+    // ── Helper: Build a product label ────────────────────────────────────────
+    function productLabel(productId) {
+      if (productId === 'espressgo-original') return 'ESPRESSGO Original';
+      if (productId === 'espressgo-oatmilk') return 'ESPRESSGO Oat Milk';
+      return productId;
+    }
+
+    // ── Helper: Format a date string ─────────────────────────────────────────
+    function fmtDate(isoStr) {
+      if (!isoStr) return 'N/A';
+      return new Date(isoStr).toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // ── Helper: Status badge HTML ─────────────────────────────────────────────
+    function statusBadge(status) {
+      const colors = {
+        pending:    { bg: '#fef3c7', text: '#92400e', dot: '#f59e0b' },
+        processing: { bg: '#dbeafe', text: '#1e40af', dot: '#3b82f6' },
+        shipped:    { bg: '#ede9fe', text: '#5b21b6', dot: '#8b5cf6' },
+        delivered:  { bg: '#dcfce7', text: '#166534', dot: '#22c55e' },
+        active:     { bg: '#dcfce7', text: '#166534', dot: '#22c55e' },
+        paused:     { bg: '#f3f4f6', text: '#374151', dot: '#9ca3af' },
+        cancelled:  { bg: '#fee2e2', text: '#991b1b', dot: '#ef4444' }
+      };
+      const c = colors[String(status).toLowerCase()] || { bg: '#f3f4f6', text: '#374151', dot: '#9ca3af' };
+      return `<span style="display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;background:${c.bg};color:${c.text};font-size:11px;font-weight:600;">
+        <span style="width:6px;height:6px;border-radius:50%;background:${c.dot};flex-shrink:0;"></span>${String(status).toUpperCase()}</span>`;
+    }
+
+    // ── Helper: Render inline invoice list card ───────────────────────────────
+    function renderInvoiceList(invoices) {
+      if (!invoices || invoices.length === 0) {
+        return '<div style="padding:12px;text-align:center;color:#6b7280;font-size:13px;">No invoices found yet.</div>';
+      }
+      const rows = invoices.map(o => `
+        <div style="padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.07);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div>
+            <div style="font-weight:600;font-size:12px;color:#1f2937;">Order #${escapeHTML(String(o.id))}</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:2px;">${fmtDate(o.date_ordered)} · ${o.total_cartons || 0} ctn</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:700;font-size:12px;color:#92400e;">SGD $${Number(o.total_amount || 0).toFixed(2)}</div>
+            <div style="margin-top:3px;">${statusBadge(o.status || 'pending')}</div>
+          </div>
+        </div>`).join('');
+      return `<div style="margin-top:10px;border:1px solid rgba(0,0,0,0.1);border-radius:10px;padding:10px 14px;background:#fafaf9;">
+        <div style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">Recent Invoices</div>
+        ${rows}
+      </div>`;
+    }
+
+    // ── Helper: Render single invoice detail card ─────────────────────────────
+    function renderInvoiceDetail(order) {
+      const items = (order.order_items || []).map(i =>
+        `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;">
+          <span>${escapeHTML(productLabel(i.product_id))}</span>
+          <span style="color:#6b7280;">${i.cartons} ctn × $${Number(i.price_per_carton).toFixed(2)}</span>
+          <span style="font-weight:600;">$${(i.cartons * i.price_per_carton).toFixed(2)}</span>
+        </div>`).join('');
+      return `<div style="margin-top:10px;border:1px solid rgba(0,0,0,0.1);border-radius:10px;padding:12px 14px;background:#fafaf9;">
+        <div style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Invoice #${escapeHTML(String(order.id))}</div>
+        ${items}
+        <div style="border-top:1px solid rgba(0,0,0,0.08);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;font-size:12px;">Total</span>
+          <span style="font-weight:700;font-size:13px;color:#92400e;">SGD $${Number(order.total_amount || 0).toFixed(2)}</span>
+        </div>
+        <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:#6b7280;">${fmtDate(order.date_ordered)}</span>
+          ${statusBadge(order.status || 'pending')}
+        </div>
+      </div>`;
+    }
+
+    // ── Helper: Render subscription list card ─────────────────────────────────
+    function renderSubscriptionList(subs) {
+      if (!subs || subs.length === 0) {
+        return '<div style="padding:12px;text-align:center;color:#6b7280;font-size:13px;">No subscriptions found.</div>';
+      }
+      const cards = subs.map(sub => {
+        const cycleTotal = Array.isArray(sub.subscription_items)
+          ? sub.subscription_items.reduce((s, i) => s + (i.cartons || 0) * (i.price_per_carton || 0), 0)
+          : 0;
+        return `<div style="padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.07);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:600;font-size:12px;color:#1f2937;">${escapeHTML(String(sub.frequency || 'Monthly'))} Subscription</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px;">ID: ${escapeHTML(String(sub.id))}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:700;font-size:12px;color:#92400e;">SGD $${cycleTotal.toFixed(2)}/cycle</div>
+              <div style="margin-top:3px;">${statusBadge(sub.status || 'active')}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+      return `<div style="margin-top:10px;border:1px solid rgba(0,0,0,0.1);border-radius:10px;padding:10px 14px;background:#fafaf9;">
+        <div style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;">Your Subscriptions</div>
+        ${cards}
+      </div>`;
+    }
+
+    // ── PLACE_ORDER confirmation dialog ───────────────────────────────────────
+    function showPlaceOrderConfirm() {
+      const localCart = JSON.parse(localStorage.getItem('espressgo_cart') || '{}');
+      const entries = Object.entries(localCart);
+      if (entries.length === 0) {
+        addMessage('agent', 'Your cart is empty! Please add products first before placing an order. ☕');
+        return;
+      }
+
+      // Build cart summary
+      const totalCartons = entries.reduce((s, [, q]) => s + q, 0);
+      const getPrice = (pid, total) => {
+        const t = { 'espressgo-original': [{min:30,p:96},{min:10,p:108},{min:1,p:120}], 'espressgo-oatmilk': [{min:30,p:104},{min:10,p:117},{min:1,p:130}] };
+        const tiers = t[pid] || t['espressgo-original'];
+        for (const tier of tiers) if (total >= tier.min) return tier.p;
+        return tiers[tiers.length - 1].p;
+      };
+      let total = 0;
+      const lines = entries.map(([pid, qty]) => {
+        const price = getPrice(pid, totalCartons);
+        const subtotal = price * qty;
+        total += subtotal;
+        return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;"><span>${escapeHTML(productLabel(pid))}</span><span style="color:#6b7280;">${qty} ctn × $${price}</span><span style="font-weight:600;">$${subtotal.toFixed(2)}</span></div>`;
+      }).join('');
+
+      const confirmId = 'kopigo-confirm-' + Date.now();
+      const confirmHTML = `
+        <div style="margin-top:10px;border:1px solid rgba(0,0,0,0.12);border-radius:12px;padding:14px;background:#fefce8;">
+          <div style="font-size:11px;font-weight:700;color:#92400e;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">📋 Order Summary</div>
+          ${lines}
+          <div style="border-top:1px solid rgba(0,0,0,0.08);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:700;font-size:12px;">
+            <span>Total</span><span style="color:#92400e;">SGD $${total.toFixed(2)}</span>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button id="${confirmId}-confirm" style="flex:1;padding:8px;background:#92400e;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">✅ Confirm Order</button>
+            <button id="${confirmId}-cancel" style="flex:1;padding:8px;background:#f3f4f6;color:#374151;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">✖ Cancel</button>
+          </div>
+        </div>`;
+
+      // Inject confirm widget into the last agent message
+      const msgEl = document.createElement('div');
+      msgEl.innerHTML = confirmHTML;
+      faqChatBody.appendChild(msgEl);
+      faqChatBody.scrollTop = faqChatBody.scrollHeight;
+
+      document.getElementById(`${confirmId}-confirm`).addEventListener('click', async () => {
+        msgEl.remove();
+        showTypingIndicator();
+        try {
+          const currentCart = JSON.parse(localStorage.getItem('espressgo_cart') || '{}');
+          const result = await callChatAction({ action: 'PLACE_ORDER', cart: currentCart });
+          removeTypingIndicator();
+          if (result.success) {
+            const order = result.order;
+            addMessage('agent', `🎉 Order placed successfully! Your order **#${order.id}** for **${order.totalCartons} cartons** (SGD $${Number(order.totalAmount).toFixed(2)}) is now **PENDING** and will be processed within 1 business day. Thank you! ☕`);
+            // Clear the local cart
+            localStorage.removeItem('espressgo_cart');
+            if (typeof window.updateCart === 'function') {
+              window.updateCart('espressgo-original', 0);
+              window.updateCart('espressgo-oatmilk', 0);
+            }
+            if (typeof showToast === 'function') showToast('Order Placed! 🎉', `Order #${order.id} confirmed — SGD $${Number(order.totalAmount).toFixed(2)}`, 'success');
+          } else {
+            addMessage('agent', `❌ Sorry, I couldn't place your order: ${result.error}. Please try again or contact Damien on <a href="https://wa.me/6587977961" target="_blank">WhatsApp</a>.`);
+          }
+        } catch (err) {
+          removeTypingIndicator();
+          addMessage('agent', `❌ Connection error while placing order. Please try again! ☕`);
+        }
+        faqChatBody.scrollTop = faqChatBody.scrollHeight;
+      });
+
+      document.getElementById(`${confirmId}-cancel`).addEventListener('click', () => {
+        msgEl.remove();
+        addMessage('agent', 'No problem! Your draft cart is still saved. Let me know when you\'re ready to place your order! ☕');
+        faqChatBody.scrollTop = faqChatBody.scrollHeight;
+      });
+    }
+
+    // ── Main response + action token processor ────────────────────────────────
     // Shared execution parser to cleanly parse responses and update UI states
     function processAnswer(rawAnswer) {
       removeTypingIndicator();
 
-      // Regex to check globally for all [[ORDER_ACTION: productId, cartons]] tokens (supports single/double brackets and +/- prefix)
+      // ── 1. Parse ORDER_ACTION tokens (draft cart update) ─────────────────
       const actionRegex = /\[{1,2}ORDER_ACTION:\s*([a-zA-Z0-9_-]+),\s*([+-]?\d+)\s*(?:carton|ctn|box)?s?\s*\]{1,2}/gi;
       const matches = [...rawAnswer.matchAll(actionRegex)];
 
-      // Strip out structured brackets entirely to keep the visual UI clean
-      let cleanedAnswer = rawAnswer.replace(/\[{1,2}ORDER_ACTION:.*?\]{1,2}/gi, '').trim();
+      // ── 2. Parse new DB action tokens ────────────────────────────────────
+      const placeOrderToken    = /\[{1,2}PLACE_ORDER\]{1,2}/i.test(rawAnswer);
+      const getInvoicesToken   = /\[{1,2}GET_INVOICES\]{1,2}/i.test(rawAnswer);
+      const getInvoiceMatch    = rawAnswer.match(/\[{1,2}GET_INVOICE:\s*([^\]]+)\]{1,2}/i);
+      const getSubsToken       = /\[{1,2}GET_SUBSCRIPTIONS\]{1,2}/i.test(rawAnswer);
+      const pauseSubMatch      = rawAnswer.match(/\[{1,2}PAUSE_SUBSCRIPTION:\s*([^\]]+)\]{1,2}/i);
+      const resumeSubMatch     = rawAnswer.match(/\[{1,2}RESUME_SUBSCRIPTION:\s*([^\]]+)\]{1,2}/i);
+
+      // Strip all action tokens from the display text
+      let cleanedAnswer = rawAnswer
+        .replace(/\[{1,2}ORDER_ACTION:.*?\]{1,2}/gi, '')
+        .replace(/\[{1,2}PLACE_ORDER\]{1,2}/gi, '')
+        .replace(/\[{1,2}GET_INVOICES\]{1,2}/gi, '')
+        .replace(/\[{1,2}GET_INVOICE:\s*[^\]]+\]{1,2}/gi, '')
+        .replace(/\[{1,2}GET_SUBSCRIPTIONS\]{1,2}/gi, '')
+        .replace(/\[{1,2}PAUSE_SUBSCRIPTION:\s*[^\]]+\]{1,2}/gi, '')
+        .replace(/\[{1,2}RESUME_SUBSCRIPTION:\s*[^\]]+\]{1,2}/gi, '')
+        .trim();
 
       // Blank bubble protection
       if (!cleanedAnswer) {
@@ -1546,7 +1758,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chatHistory.push({ role: 'agent', content: cleanedAnswer });
       if (chatHistory.length > 12) chatHistory.splice(0, chatHistory.length - 12);
 
-      // If any AI triggers are found, update the cart dynamically!
+      // ── 3. Process ORDER_ACTION (draft cart) ─────────────────────────────
       if (matches.length > 0) {
         const localCart = JSON.parse(localStorage.getItem('espressgo_cart') || '{}');
         const productsAdded = [];
@@ -1623,6 +1835,121 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast("AI Cart Updated!", toastBody, "success");
         }
       }
+
+      // ── 4. Process PLACE_ORDER (confirm + submit to DB) ─────────────────
+      if (placeOrderToken) {
+        setTimeout(() => showPlaceOrderConfirm(), 200);
+      }
+
+      // ── 5. Process GET_INVOICES ──────────────────────────────────────────
+      if (getInvoicesToken) {
+        setTimeout(async () => {
+          const loading = document.createElement('div');
+          loading.className = 'faq-msg agent';
+          loading.style.cssText = 'opacity:0.6;font-size:12px;';
+          loading.textContent = '📋 Fetching your invoices...';
+          faqChatBody.appendChild(loading);
+          faqChatBody.scrollTop = faqChatBody.scrollHeight;
+          try {
+            const result = await callChatAction({ action: 'GET_INVOICES' });
+            loading.remove();
+            if (result.success) {
+              const el = document.createElement('div');
+              el.className = 'faq-msg agent';
+              el.innerHTML = renderInvoiceList(result.invoices);
+              faqChatBody.appendChild(el);
+            } else {
+              addMessage('agent', `❌ ${result.error}`);
+            }
+          } catch { loading.remove(); addMessage('agent', '❌ Could not fetch invoices right now. Try again shortly!'); }
+          faqChatBody.scrollTop = faqChatBody.scrollHeight;
+        }, 300);
+      }
+
+      // ── 6. Process GET_INVOICE (specific order) ──────────────────────────
+      if (getInvoiceMatch) {
+        const orderId = getInvoiceMatch[1].trim();
+        setTimeout(async () => {
+          const loading = document.createElement('div');
+          loading.className = 'faq-msg agent';
+          loading.style.cssText = 'opacity:0.6;font-size:12px;';
+          loading.textContent = `📄 Fetching invoice #${orderId}...`;
+          faqChatBody.appendChild(loading);
+          faqChatBody.scrollTop = faqChatBody.scrollHeight;
+          try {
+            const result = await callChatAction({ action: 'GET_INVOICE', orderId });
+            loading.remove();
+            if (result.success) {
+              const el = document.createElement('div');
+              el.className = 'faq-msg agent';
+              el.innerHTML = renderInvoiceDetail(result.invoice);
+              faqChatBody.appendChild(el);
+            } else {
+              addMessage('agent', `❌ ${result.error}`);
+            }
+          } catch { loading.remove(); addMessage('agent', '❌ Could not fetch invoice right now.'); }
+          faqChatBody.scrollTop = faqChatBody.scrollHeight;
+        }, 300);
+      }
+
+      // ── 7. Process GET_SUBSCRIPTIONS ─────────────────────────────────────
+      if (getSubsToken) {
+        setTimeout(async () => {
+          const loading = document.createElement('div');
+          loading.className = 'faq-msg agent';
+          loading.style.cssText = 'opacity:0.6;font-size:12px;';
+          loading.textContent = '🔄 Fetching your subscriptions...';
+          faqChatBody.appendChild(loading);
+          faqChatBody.scrollTop = faqChatBody.scrollHeight;
+          try {
+            const result = await callChatAction({ action: 'GET_SUBSCRIPTIONS' });
+            loading.remove();
+            if (result.success) {
+              const el = document.createElement('div');
+              el.className = 'faq-msg agent';
+              el.innerHTML = renderSubscriptionList(result.subscriptions);
+              faqChatBody.appendChild(el);
+            } else {
+              addMessage('agent', `❌ ${result.error}`);
+            }
+          } catch { loading.remove(); addMessage('agent', '❌ Could not fetch subscriptions right now.'); }
+          faqChatBody.scrollTop = faqChatBody.scrollHeight;
+        }, 300);
+      }
+
+      // ── 8. Process PAUSE_SUBSCRIPTION ────────────────────────────────────
+      if (pauseSubMatch) {
+        const subscriptionId = pauseSubMatch[1].trim();
+        setTimeout(async () => {
+          try {
+            const result = await callChatAction({ action: 'PAUSE_SUBSCRIPTION', subscriptionId });
+            if (result.success) {
+              addMessage('agent', `⏸ Subscription **#${subscriptionId}** (${result.subscription?.frequency || ''}) has been **paused** successfully. You can resume it any time by asking me! ☕`);
+              if (typeof showToast === 'function') showToast('Subscription Paused', `Subscription #${subscriptionId} is now paused.`, 'info');
+            } else {
+              addMessage('agent', `❌ Could not pause subscription: ${result.error}`);
+            }
+          } catch { addMessage('agent', '❌ Connection error while pausing subscription.'); }
+          faqChatBody.scrollTop = faqChatBody.scrollHeight;
+        }, 300);
+      }
+
+      // ── 9. Process RESUME_SUBSCRIPTION ───────────────────────────────────
+      if (resumeSubMatch) {
+        const subscriptionId = resumeSubMatch[1].trim();
+        setTimeout(async () => {
+          try {
+            const result = await callChatAction({ action: 'RESUME_SUBSCRIPTION', subscriptionId });
+            if (result.success) {
+              addMessage('agent', `▶ Subscription **#${subscriptionId}** (${result.subscription?.frequency || ''}) has been **resumed** and is now active! ☕`);
+              if (typeof showToast === 'function') showToast('Subscription Resumed', `Subscription #${subscriptionId} is now active.`, 'success');
+            } else {
+              addMessage('agent', `❌ Could not resume subscription: ${result.error}`);
+            }
+          } catch { addMessage('agent', '❌ Connection error while resuming subscription.'); }
+          faqChatBody.scrollTop = faqChatBody.scrollHeight;
+        }, 300);
+      }
     }
 
     // 2. Add organic thinking delay
@@ -1641,7 +1968,16 @@ document.addEventListener('DOMContentLoaded', () => {
             history: chatHistory,
             user: Auth.getUser(),
             cart: JSON.parse(localStorage.getItem('espressgo_cart') || '{}'),
-            orders: Orders.getAll()
+            orders: Orders.getAll(),
+            subscriptions: (function() {
+              try {
+                const client = getSupabaseClient();
+                const currentUser = Auth.getUser();
+                if (!client || !currentUser?.id) return [];
+                // Return cached subscriptions if already loaded, otherwise empty
+                return window._kopigoSubscriptions || [];
+              } catch { return []; }
+            })()
           })
         });
 
@@ -1677,9 +2013,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (hasInitialized) return;
     hasInitialized = true;
 
-    // Greeting Message
-    addMessage('agent', "Hello B2B partner! 👋 I am your Smart AI-powered KOPIGO Concierge, powered by Gemini via OpenRouter. Ask me anything about our wholesale pricing, Singapore logistics, caffeine parameters, or procurement! \n\nOr click a shortcut question to begin:");
+    // Greeting Message — updated to mention DB-integrated capabilities
+    addMessage('agent', "Hello B2B partner! 👋 I am **KOPIGO**, your AI-powered ESPRESSGO concierge.\n\nI'm now **directly connected to your account** — I can:\n• 🛒 Add products & **place real orders** via chat\n• 📋 Pull your **invoice history** on demand\n• 🔄 Manage your **subscriptions** (pause, resume, list)\n\nOr click a shortcut question to begin:");
     await loadFaqsFromSupabase();
+
+    // Silently pre-fetch subscriptions into a cache so KOPIGO context is rich
+    try {
+      const currentUser = Auth.getUser();
+      if (currentUser?.id) {
+        const subsResult = await callChatAction({ action: 'GET_SUBSCRIPTIONS' });
+        if (subsResult.success) {
+          window._kopigoSubscriptions = (subsResult.subscriptions || []).map(s => ({
+            id: s.id,
+            frequency: s.frequency,
+            status: s.status,
+            items: s.subscription_items || []
+          }));
+        }
+      }
+    } catch (e) {
+      // Non-critical: KOPIGO still works without subscription context
+      console.warn('[KOPIGO] Could not pre-fetch subscriptions:', e.message);
+    }
   }
 
   // Toggle widget event listeners

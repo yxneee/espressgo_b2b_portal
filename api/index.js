@@ -48,6 +48,9 @@ app.post('/api/create-checkout-session', async (req, res) => {
 const chat = require('./chat.js');
 app.post(['/api/chat', '/chat'], (req, res) => chat(req, res));
 
+const chatAction = require('./chat-action.js');
+app.post(['/api/chat-action', '/chat-action'], (req, res) => chatAction(req, res));
+
 if (process.env.NODE_ENV !== 'production') {
   app.listen(3000, () => console.log('Local server: http://localhost:3000'));
 }

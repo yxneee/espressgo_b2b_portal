@@ -69,7 +69,7 @@ module.exports = async function handler(req, res) {
       body = {};
     }
   }
-  const { question, history, user, cart, orders } = body || {};
+  const { question, history, user, cart, orders, subscriptions } = body || {};
   if (!question || typeof question !== 'string') {
     return res.status(400).json({ error: 'Missing parameter: "question" string is required.' });
   }
@@ -81,15 +81,91 @@ module.exports = async function handler(req, res) {
     let mockAnswer = "";
     const qLower = question.toLowerCase();
 
-    if (user && (qLower.includes('who am i') || qLower.includes('my name') || qLower.includes('company'))) {
+    // ── NEW DB-ACTION INTENTS (emit tokens, frontend handles the rest) ──
+
+    // PLACE_ORDER intent
+    if (
+      qLower.includes('place my order') || qLower.includes('confirm order') ||
+      qLower.includes('checkout') || qLower.includes('submit my order') ||
+      qLower.includes('go ahead and order') || qLower.includes('place order') ||
+      qLower.includes('confirm my order')
+    ) {
+      const hasCart = cart && typeof cart === 'object' && !Array.isArray(cart) && Object.keys(cart).length > 0;
+      if (hasCart) {
+        const items = Object.entries(cart).map(([pid, qty]) => {
+          const name = pid === 'espressgo-original' ? 'Original' : (pid === 'espressgo-oatmilk' ? 'Oat Milk' : pid);
+          return `• **${qty} ctn ${name}**`;
+        }).join('\n');
+        mockAnswer = `Perfect! Here's your order summary:\n\n${items}\n\nPlease confirm below to place your real B2B order. ☕\n\n[[PLACE_ORDER]]`;
+      } else {
+        mockAnswer = `Your cart is empty! Please add some products first before placing an order.\n\nTry: "Add 4 cartons of Original" or "2 cartons Oat Milk" ☕`;
+      }
+    }
+
+    // GET_INVOICES intent
+    else if (
+      qLower.includes('show my invoice') || qLower.includes('invoice history') ||
+      qLower.includes('my invoices') || qLower.includes('past orders') ||
+      qLower.includes('order history') || qLower.includes('show my orders') ||
+      qLower.includes('previous orders') || qLower.includes('all my orders')
+    ) {
+      mockAnswer = `Sure! Pulling your invoice history from the database now. 📋\n\n[[GET_INVOICES]]`;
+    }
+
+    // GET_INVOICE (specific) intent — "invoice #123", "show order 45"
+    else if (
+      (qLower.includes('invoice') || qLower.includes('order')) &&
+      /\d+/.test(question)
+    ) {
+      const idMatch = question.match(/\d+/);
+      const orderId = idMatch ? idMatch[0] : null;
+      if (orderId) {
+        mockAnswer = `Fetching the details for Invoice #${orderId} now. 📄\n\n[[GET_INVOICE: ${orderId}]]`;
+      } else {
+        mockAnswer = `Please tell me which invoice number you'd like to see! For example: "show invoice 42" ☕`;
+      }
+    }
+
+    // GET_SUBSCRIPTIONS intent
+    else if (
+      qLower.includes('subscription') || qLower.includes('recurring order') ||
+      qLower.includes('my recurring') || qLower.includes('show subscriptions') ||
+      qLower.includes('what subscriptions') || qLower.includes('my plans')
+    ) {
+      // Check if it's a pause/resume intent first
+      if (qLower.includes('pause') || qLower.includes('stop recurring') || qLower.includes('suspend')) {
+        // Try to extract an ID from the message
+        const idMatch = question.match(/[a-f0-9-]{8,}/i);
+        if (idMatch) {
+          mockAnswer = `Pausing subscription **#${idMatch[0]}** now. ⏸\n\n[[PAUSE_SUBSCRIPTION: ${idMatch[0]}]]`;
+        } else {
+          // No ID given — first show them the list so they can identify which one
+          mockAnswer = `Let me pull up your subscriptions so you can tell me which one to pause. 🔄\n\n[[GET_SUBSCRIPTIONS]]`;
+        }
+      } else if (qLower.includes('resume') || qLower.includes('restart') || qLower.includes('reactivate')) {
+        const idMatch = question.match(/[a-f0-9-]{8,}/i);
+        if (idMatch) {
+          mockAnswer = `Resuming subscription **#${idMatch[0]}** now. ▶\n\n[[RESUME_SUBSCRIPTION: ${idMatch[0]}]]`;
+        } else {
+          mockAnswer = `Let me pull up your subscriptions so you can tell me which one to resume. 🔄\n\n[[GET_SUBSCRIPTIONS]]`;
+        }
+      } else {
+        // General list subscriptions
+        mockAnswer = `Fetching your active subscriptions now. 🔄\n\n[[GET_SUBSCRIPTIONS]]`;
+      }
+    }
+
+    // ── EXISTING INTENTS (unchanged) ──
+
+    else if (user && (qLower.includes('who am i') || qLower.includes('my name') || qLower.includes('my company'))) {
       mockAnswer = `Hello! You are logged in as **${user.contactName || 'Valued Partner'}** representing **${user.companyName || 'ESPRESSGO Customer'}** (Business Type: ${user.businessType || 'B2B'}). How can KOPIGO help your company today? ☕`;
     } else if (cart && typeof cart === 'object' && !Array.isArray(cart) && Object.keys(cart).length > 0 && (qLower.includes('my cart') || qLower.includes('what did i order') || qLower.includes('what is in my cart') || qLower.includes('cart details'))) {
       const items = Object.entries(cart).map(([prodId, qty]) => {
         const prodName = prodId === 'espressgo-original' ? 'ESPRESSGO Original' : (prodId === 'espressgo-oatmilk' ? 'ESPRESSGO Oat Milk' : prodId);
         return `• **${prodName}**: ${qty} carton(s) (${qty * 50} pouches)`;
       }).join('\n');
-      mockAnswer = `Your current B2B cart draft contains:\n\n${items}\n\nWould you like me to draft an order or add more? ☕`;
-    } else if (orders && Array.isArray(orders) && orders.length > 0 && (qLower.includes('order status') || qLower.includes('my orders') || qLower.includes('track order') || qLower.includes('where is my order') || qLower.includes('status of order'))) {
+      mockAnswer = `Your current B2B cart draft contains:\n\n${items}\n\nWould you like me to place this as a real order? Just say **"place my order"** to confirm! ☕`;
+    } else if (orders && Array.isArray(orders) && orders.length > 0 && (qLower.includes('order status') || qLower.includes('track order') || qLower.includes('where is my order') || qLower.includes('status of order'))) {
       const orderList = orders.slice(0, 2).map(o => {
         if (!o) return '';
         const orderId = o.id || 'N/A';
@@ -99,7 +175,7 @@ module.exports = async function handler(req, res) {
         return `• **Order #${orderId}**: SGD $${amount} | Status: [${status}] | Date: ${dateStr}`;
       }).filter(Boolean).join('\n');
       mockAnswer = `Here are your recent B2B orders:\n\n${orderList}\n\nAll standard SG deliveries take 2-3 business days. You can view full tracking in your Account Dashboard! 🚚`;
-    } else if (qLower.includes('add') || qLower.includes('order') || qLower.includes('cart') || qLower.includes('purchase') || qLower.includes('buy') || qLower.includes('car')) {
+    } else if (qLower.includes('add') || qLower.includes('order') || qLower.includes('cart') || qLower.includes('purchase') || qLower.includes('buy')) {
       let originalQty = 0;
       let oatQty = 0;
       let mockExplanation = [];
@@ -176,15 +252,16 @@ module.exports = async function handler(req, res) {
       }
     } else if (qLower.includes('halal')) {
       mockAnswer = "Yes, absolutely! **EspressGo is 100% Halal-certified**. All of our manufacturing lines in Singapore follow MUIS guidelines.";
-    } else if (qLower.includes('delivery') || qLower.includes('long')) {
+    } else if (qLower.includes('delivery') || qLower.includes('how long')) {
       mockAnswer = "Standard B2B delivery in Singapore takes **2 to 3 business days**. For urgent orders submitted before 12 PM, we offer next-day express courier service for an extra SGD 15.";
-    } else if (qLower.includes('dairy') || qLower.includes('sugar') || qLower.includes('oat')) {
+    } else if (qLower.includes('dairy') || qLower.includes('sugar') || qLower.includes('ingredient')) {
       mockAnswer = "All ESPRESSGO gel shots are **100% dairy-free** and vegan-friendly! Original uses low-sugar robusta cold brew, while Oat Milk uses premium plant-based oat milk and raw cane sugar.";
     } else {
-      mockAnswer = `Hello B2B Partner! 👋 I am your automated B2B sales assistant. I received your custom inquiry: "${question}". \n\nHow can KOPIGO help fuel your team today? I can draft orders, check your current cart, or answer questions about our Halal certification and Singapore B2B delivery! ☕`;
+      mockAnswer = `Hello B2B Partner! 👋 I'm KOPIGO, your AI-powered ESPRESSGO concierge.\n\nI can help you:\n• 🛒 **Add products to cart** — "Add 5 cartons of Original"\n• ✅ **Place real orders** — "Place my order"\n• 📋 **View invoices** — "Show my invoices"\n• 🔄 **Manage subscriptions** — "Show my subscriptions"\n• ❓ **Answer questions** about pricing, delivery & more\n\nWhat can I do for you today? ☕`;
     }
     return res.status(200).json({ answer: mockAnswer });
   }
+
 
   const systemInstruction = `
 You are "KOPIGO", the official AI Sales Concierge for ESPRESSGO — Singapore's premium B2B cold-brew espresso gel brand.
@@ -304,6 +381,47 @@ DO NOT emit [[ORDER_ACTION]] for Coming Soon products (Matcha, Decaf).
 DO NOT emit [[ORDER_ACTION]] if the buyer is just asking questions, not ordering/modifying their cart.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LIVE DATABASE ACTION TOKENS (NEW — READ CAREFULLY):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You are directly integrated with the ESPRESSGO inventory and order database.
+When a buyer asks you to perform one of these actions, emit the correct token at the END of your response (after your message text). Never emit these for hypothetical questions — only when the buyer explicitly requests the action.
+
+ACTION TOKEN REFERENCE:
+
+1. PLACE ORDER (confirm & submit current cart as a real order):
+   Triggers: "place my order", "confirm order", "checkout", "submit my order", "go ahead and order"
+   Token: [[PLACE_ORDER]]
+   IMPORTANT: Before emitting this token, ALWAYS summarise what's in their cart first. If cart is empty, tell them to add products first — do NOT emit this token.
+
+2. VIEW ALL INVOICES (show last 5 invoices from DB):
+   Triggers: "show my invoices", "invoice history", "show my orders", "past orders", "order history"
+   Token: [[GET_INVOICES]]
+
+3. VIEW SPECIFIC INVOICE:
+   Triggers: "show invoice #[id]", "invoice number [id]", "details for order [id]"
+   Token: [[GET_INVOICE: order-id]]
+   Example: User says "show me invoice 42" → [[GET_INVOICE: 42]]
+
+4. LIST SUBSCRIPTIONS:
+   Triggers: "show my subscriptions", "what subscriptions do I have", "my recurring orders"
+   Token: [[GET_SUBSCRIPTIONS]]
+
+5. PAUSE A SUBSCRIPTION:
+   Triggers: "pause my subscription", "stop recurring order", "pause subscription [id]"
+   Token: [[PAUSE_SUBSCRIPTION: subscription-id]]
+   If the buyer doesn't specify which subscription ID and they have multiple, ask them to clarify.
+
+6. RESUME A SUBSCRIPTION:
+   Triggers: "resume my subscription", "restart subscription", "reactivate recurring order [id]"
+   Token: [[RESUME_SUBSCRIPTION: subscription-id]]
+
+RULES FOR ACTION TOKENS:
+- NEVER emit an action token if the buyer is just asking questions, not requesting an action.
+- NEVER emit [[PLACE_ORDER]] if the cart context shows it is empty.
+- Only emit ONE [[PLACE_ORDER]] per reply — never duplicate it.
+- Always confirm the action in plain English first, then append the token on its own line at the very end.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONTACT & TEAM:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - Company: ESPRESSGO
@@ -375,6 +493,24 @@ USEFUL PAGE LINKS (use HTML anchor tags):
     contextInstruction += `  - Action: If they ask about their order status (e.g. "where is my order" or "what is the status of my order #1234"), look it up from the history above and answer directly with status (pending, processing, shipped, delivered) and delivery times!\n`;
   } else {
     contextInstruction += `- ORDER HISTORY: No previous orders found on this device.\n`;
+  }
+
+  if (subscriptions && Array.isArray(subscriptions) && subscriptions.length > 0) {
+    contextInstruction += `- ACTIVE SUBSCRIPTIONS:\n`;
+    subscriptions.forEach(sub => {
+      if (sub && typeof sub === 'object') {
+        const subId = sub.id || 'N/A';
+        const freq = sub.frequency || 'monthly';
+        const status = sub.status ? String(sub.status).toUpperCase() : 'UNKNOWN';
+        const cycleTotal = Array.isArray(sub.items)
+          ? sub.items.reduce((s, i) => s + (i.cartons || 0) * (i.price_per_carton || 0), 0).toFixed(2)
+          : '0.00';
+        contextInstruction += `  - Subscription #${subId}: ${freq} | Status: [${status}] | Cycle Total: SGD $${cycleTotal}\n`;
+      }
+    });
+    contextInstruction += `  - Action: If they ask to pause, resume, or manage a subscription, use the subscription ID from the list above in the correct action token.\n`;
+  } else {
+    contextInstruction += `- SUBSCRIPTIONS: No active subscriptions found for this buyer.\n`;
   }
 
   try {
