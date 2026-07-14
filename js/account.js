@@ -1623,45 +1623,52 @@ function renderSubscriptions(subscriptions) {
 
   if (!subscriptions.length) {
     container.innerHTML = `
-      <div class="card" style="padding:4rem 1.5rem;text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:.75rem;opacity:.3;">🔄</div>
-        <div style="color:var(--brown);margin-bottom:.35rem;">No active subscriptions</div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;">
-          Set up a recurring order in the catalog to save time.
-        </p>
-        <a href="catalog.html" class="btn-dark btn-sm">Browse Catalog</a>
+      <div class="subscription-empty">
+        <div class="subscription-empty-icon">🔄</div>
+        <h3>No active subscriptions</h3>
+        <p>Set up a recurring order in the catalog to save time and ensure you never run out of stock.</p>
+        <a href="catalog.html" class="btn-dark btn-sm" style="margin-top:1.5rem; text-decoration:none; display:inline-block;">Browse Catalog</a>
       </div>
     `;
     return;
   }
 
   container.innerHTML = `
-    <div class="subscriptions-list">
+    <div class="subscriptions-grid-container">
       ${subscriptions.map(sub => {
         const isActive = sub.status === 'active';
+        // Extract names of items for a quick summary
+        const itemSummary = sub.subscription_items?.map(i => i.name || 'Product').join(', ') || 'No items';
+        
         return `
-          <div class="sub-card">
-            <div class="sub-card-header">
-              <h3>${escapeHTML(sub.frequency)} Delivery</h3>
-              <div class="sub-status ${sub.status}">
-                <span class="order-dot" style="background: ${isActive ? '#16a34a' : '#fbbf24'};"></span>
-                ${escapeHTML(sub.status)}
+          <div class="subscription-card">
+            <div class="subscription-header">
+              <div>
+                <h3>${sub.frequency} Delivery</h3>
+                <p style="font-size:11px; margin-top:4px;">ID: #${sub.id.slice(0, 8).toUpperCase()}</p>
+              </div>
+              <div class="subscription-status ${sub.status}">
+                <span class="order-dot" style="background: currentColor;"></span>
+                ${sub.status}
               </div>
             </div>
 
-            <div class="sub-card-body">
-              <div class="sub-info-item">
-                <span class="sub-info-label">Subscription ID</span>
-                <span class="sub-info-value">#${sub.id.slice(0, 8)}</span>
+            <div class="subscription-items">
+              <div style="font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">
+                Recurring Items
               </div>
-              <div class="sub-info-item">
-                <span class="sub-info-label">Started On</span>
-                <span class="sub-info-value">${new Date(sub.created_at).toLocaleDateString()}</span>
-              </div>
+              <!-- This matches your order-item-row style for consistency -->
+              ${(sub.subscription_items || []).map(item => `
+                <div class="subscription-item">
+                  <span class="subscription-item-name">
+                    ${item.cartons} ctn × ${item.name || 'Coffee Product'}
+                  </span>
+                </div>
+              `).join('')}
             </div>
 
-            <div class="sub-card-actions">
-              <button class="btn-dark btn-sm" onclick="toggleSubscription('${sub.id}', '${sub.status}')">
+            <div class="subscription-actions">
+              <button class="btn-dark btn-sm" style="flex:1;" onclick="toggleSubscription('${sub.id}', '${sub.status}')">
                 ${isActive ? '⏸ Pause' : '▶️ Resume'}
               </button>
               <button class="btn-ghost btn-sm" style="color: #ef4444;" onclick="cancelSubscription('${sub.id}')">
