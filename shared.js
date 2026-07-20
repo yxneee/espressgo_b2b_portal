@@ -1408,18 +1408,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Helper intent matchers
       function checkInvoiceIntent(q, raw) {
-        const specificMatch = raw.match(/(?:invoice|bill|receipt)\s*#?\s*([a-f0-9-]+|\d+)/i) ||
-                              /invoice\s*#?\s*([a-f0-9-]+|\d+)/i.exec(raw);
+        const specificMatch = raw.match(/(?:inv[a-z]{3,7}|invoice|bill|receipt)\s*#?\s*([a-f0-9-]+|\d+)/i) ||
+                              /inv[a-z]{3,7}\s*#?\s*([a-f0-9-]+|\d+)/i.exec(raw);
         if (specificMatch && specificMatch[1] && !/\b(history|all|my)\b/i.test(specificMatch[1])) {
           return { type: 'SPECIFIC', id: specificMatch[1] };
         }
-        const pattern = /\b(invoice|invoices|bill|bills|receipt|receipts|statement|statements|invoice history|my invoices|view invoice|show invoice|check invoice|get invoice)\b/i;
+        const pattern = /\b(inv[a-z]{3,7}|invois|invoce|invoic|bill|bills|receipt|receipts|statement|statements|invoice history|my invoices|view invoice|show invoice|check invoice|get invoice)\b/i;
         if (pattern.test(q)) return { type: 'ALL' };
         return null;
       }
 
       function checkSubscriptionIntent(q, raw) {
-        const pattern = /\b(subscription|subscriptions|sub|subs|recurring|my plan|my plans|memberships|membership)\b/i;
+        const pattern = /\b(su[bp][a-z]{2,10}t[a-z]{0,4}(?:ion|in|on|s)?|sub|subs|recurring|my plan|my plans|memberships?)\b/i;
         if (!pattern.test(q)) return null;
         if (/\b(pause|stop|suspend|freeze|cancel)\b/i.test(q)) return { type: 'PAUSE' };
         if (/\b(resume|restart|reactivate|unpause|start|continue)\b/i.test(q)) return { type: 'RESUME' };
@@ -1789,7 +1789,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Build cart summary
+      // If openModal is available on screen (e.g. catalog.html), open the official Confirm Order modal directly!
+      if (typeof window.openModal === 'function') {
+        window.openModal();
+        addMessage('agent', `I've opened the **Confirm Order Screen** for you on your catalog view! 📋\n\nPlease review your order summary, choose your payment method (**Pay Online** or **B2B Credit**), and confirm your order. ☕`);
+        return;
+      }
+
+      // Build cart summary for non-catalog pages
       const totalCartons = entries.reduce((s, [, q]) => s + q, 0);
       const getPrice = (pid, total) => {
         const t = { 'espressgo-original': [{min:30,p:96},{min:10,p:108},{min:1,p:120}], 'espressgo-oatmilk': [{min:30,p:104},{min:10,p:117},{min:1,p:130}] };
@@ -1813,9 +1820,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="border-top:1px solid rgba(0,0,0,0.08);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:700;font-size:12px;">
             <span>Total</span><span style="color:#92400e;">SGD $${total.toFixed(2)}</span>
           </div>
-          <div style="margin-top:12px;display:flex;gap:8px;">
-            <button id="${confirmId}-confirm" style="flex:1;padding:8px;background:#92400e;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">✅ Confirm Order</button>
-            <button id="${confirmId}-cancel" style="flex:1;padding:8px;background:#f3f4f6;color:#374151;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">✖ Cancel</button>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+            <a href="catalog.html" onclick="sessionStorage.setItem('espressgo_open_checkout','true')" style="display:block;text-align:center;padding:9px;background:#3B1C10;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;">🛒 Open Confirm Order Screen →</a>
+            <button id="${confirmId}-confirm" style="width:100%;padding:7px;background:#92400e;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">⚡ Quick Express Order via Chat</button>
+            <button id="${confirmId}-cancel" style="width:100%;padding:5px;background:#f3f4f6;color:#374151;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;">✖ Cancel</button>
           </div>
         </div>`;
 

@@ -1104,6 +1104,13 @@ async function initCatalogPage() {
   renderComingSoon();
   updateCheckoutBar();
   bindCheckoutButtons();
+
+  if (sessionStorage.getItem('espressgo_open_checkout') === 'true') {
+    sessionStorage.removeItem('espressgo_open_checkout');
+    setTimeout(() => {
+      openModal();
+    }, 400);
+  }
 }
 
 const recurringOrder = document.getElementById('recurringOrder');

@@ -76,14 +76,14 @@ module.exports = async function handler(req, res) {
 
   const apiKey = process.env.OPENROUTER_API_KEY;
 
-  // Helper intent matcher functions for ultra-smart & sensitive detection
+  // Helper intent matcher functions for ultra-smart & typo-tolerant detection
   function checkInvoiceIntent(qLower, rawQuestion) {
-    const specificMatch = rawQuestion.match(/(?:invoice|bill|receipt)\s*#?\s*([a-f0-9-]+|\d+)/i) ||
-                          /invoice\s*#?\s*([a-f0-9-]+|\d+)/i.exec(rawQuestion);
+    const specificMatch = rawQuestion.match(/(?:inv[a-z]{3,7}|invoice|bill|receipt)\s*#?\s*([a-f0-9-]+|\d+)/i) ||
+                          /inv[a-z]{3,7}\s*#?\s*([a-f0-9-]+|\d+)/i.exec(rawQuestion);
     if (specificMatch && specificMatch[1] && !/\b(history|all|my)\b/i.test(specificMatch[1])) {
       return { type: 'SPECIFIC', id: specificMatch[1] };
     }
-    const pattern = /\b(invoice|invoices|bill|bills|receipt|receipts|statement|statements|invoice history|my invoices|view invoice|show invoice|check invoice|get invoice)\b/i;
+    const pattern = /\b(inv[a-z]{3,7}|invois|invoce|invoic|bill|bills|receipt|receipts|statement|statements|invoice history|my invoices|view invoice|show invoice|check invoice|get invoice)\b/i;
     if (pattern.test(qLower)) {
       return { type: 'ALL' };
     }
@@ -91,7 +91,7 @@ module.exports = async function handler(req, res) {
   }
 
   function checkSubscriptionIntent(qLower, rawQuestion) {
-    const pattern = /\b(subscription|subscriptions|sub|subs|recurring|my plan|my plans|memberships|membership)\b/i;
+    const pattern = /\b(su[bp][a-z]{2,10}t[a-z]{0,4}(?:ion|in|on|s)?|sub|subs|recurring|my plan|my plans|memberships?)\b/i;
     if (!pattern.test(qLower)) return null;
 
     if (/\b(pause|stop|suspend|freeze|cancel)\b/i.test(qLower)) return { type: 'PAUSE' };

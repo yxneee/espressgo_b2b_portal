@@ -83,13 +83,19 @@ async function handlePlaceOrder(supabase, userId, userProfile, cart) {
     return { success: false, error: 'Failed to create order: ' + orderError.message };
   }
 
-  // Insert order items — matching order_items schema from catalog.js
-  const itemsToInsert = orderItems.map(i => ({
-    order_id: order.id,
-    product_id: i.product_id,
-    cartons: i.cartons,
-    price_per_carton: i.price_per_carton
-  }));
+  // Insert order items — matching order_items schema from catalog.js (including required SKU)
+  const itemsToInsert = orderItems.map(i => {
+    let skuVal = 'ESP-ORIG';
+    if (i.product_id === 'espressgo-oatmilk') skuVal = 'ESP-OATM';
+    else if (i.product_id) skuVal = String(i.product_id).replace(/[^a-zA-Z0-9]/g, '-').toUpperCase();
+    return {
+      order_id: order.id,
+      product_id: i.product_id,
+      sku: skuVal,
+      cartons: i.cartons,
+      price_per_carton: i.price_per_carton
+    };
+  });
 
   const { error: itemsError } = await supabase
     .from('order_items')
