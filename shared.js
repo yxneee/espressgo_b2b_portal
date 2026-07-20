@@ -1417,8 +1417,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Helper intent matchers
       function checkInvoiceIntent(q, raw) {
-        const specificMatch = raw.match(/(?:inv[a-z]{3,7}|invoice|bill|receipt)\s*#?\s*([a-f0-9-]+|\d+)/i) ||
-                              /inv[a-z]{3,7}\s*#?\s*([a-f0-9-]+|\d+)/i.exec(raw);
+        const specificMatch = raw.match(/(?:inv[a-z]{3,7}|invoice|bill|receipt)\s*#?\s*\b([a-f0-9-]{8,}|\d+)\b/i) ||
+                              /inv[a-z]{3,7}\s*#?\s*\b([a-f0-9-]{8,}|\d+)\b/i.exec(raw);
         if (specificMatch && specificMatch[1] && !/\b(history|all|my)\b/i.test(specificMatch[1])) {
           return { type: 'SPECIFIC', id: specificMatch[1] };
         }
