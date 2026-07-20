@@ -78,12 +78,12 @@ module.exports = async function handler(req, res) {
 
   // Helper intent matcher functions for ultra-smart & sensitive detection
   function checkInvoiceIntent(qLower, rawQuestion) {
-    const specificMatch = rawQuestion.match(/(?:invoice|order|bill|receipt)\s*#?\s*([a-f0-9-]+|\d+)/i) ||
-                          /#([a-f0-9-]+|\d+)/i.exec(rawQuestion);
+    const specificMatch = rawQuestion.match(/(?:invoice|bill|receipt)\s*#?\s*([a-f0-9-]+|\d+)/i) ||
+                          /invoice\s*#?\s*([a-f0-9-]+|\d+)/i.exec(rawQuestion);
     if (specificMatch && specificMatch[1] && !/\b(history|all|my)\b/i.test(specificMatch[1])) {
       return { type: 'SPECIFIC', id: specificMatch[1] };
     }
-    const pattern = /\b(invoice|invoices|bill|bills|receipt|receipts|statement|statements)\b|\b(past order|past orders|previous order|previous orders|order history|orders history|my orders|show orders|view orders|all orders|get orders|check orders|see orders|list orders)\b/i;
+    const pattern = /\b(invoice|invoices|bill|bills|receipt|receipts|statement|statements|invoice history|my invoices|view invoice|show invoice|check invoice|get invoice)\b/i;
     if (pattern.test(qLower)) {
       return { type: 'ALL' };
     }
@@ -100,7 +100,7 @@ module.exports = async function handler(req, res) {
   }
 
   function checkPlaceOrderIntent(qLower) {
-    return /\b(place order|place my order|confirm order|confirm my order|checkout|check out|submit order|submit my order|go ahead and order|order now|complete order|finalize order|finalise order|buy now|pay now)\b/i.test(qLower);
+    return /\b(place order|place my order|confirm order|confirm my order|checkout|check out|submit order|submit my order|go ahead and order|order now|complete order|finalize order|finalise order|buy now|pay now|order|ordering|i want to order|want to order|order products|order coffee)\b/i.test(qLower);
   }
 
   function checkCartIntent(qLower) {
@@ -453,13 +453,17 @@ When a buyer asks you to perform one of these actions, emit the correct token at
 
 ACTION TOKEN REFERENCE:
 
+CRITICAL INTENT DISTINCTION:
+- "ORDER", "BUY", "CHECKOUT": The buyer wants to purchase or draft products into their cart! Help them order products or confirm their order (`[[PLACE_ORDER]]`). NEVER emit [[GET_INVOICES]] for ordering requests!
+- "INVOICE", "INVOICES", "BILL", "RECEIPT": The buyer wants to view past invoices/receipts. ONLY emit [[GET_INVOICES]] or [[GET_INVOICE: id]] when the buyer explicitly asks for invoices, bills, or receipts!
+
 1. PLACE ORDER (confirm & submit current cart as a real order):
-   Triggers: "place my order", "confirm order", "checkout", "submit my order", "go ahead and order"
+   Triggers: "order", "place order", "place my order", "confirm order", "checkout", "submit my order", "buy"
    Token: [[PLACE_ORDER]]
-   IMPORTANT: Before emitting this token, ALWAYS summarise what's in their cart first. If cart is empty, tell them to add products first — do NOT emit this token.
+   IMPORTANT: Before emitting this token, ALWAYS summarise what's in their cart first. If cart is empty, ask them what products they'd like to order first — do NOT emit this token on an empty cart.
 
 2. VIEW ALL INVOICES (show last 5 invoices from DB):
-   Triggers: "show my invoices", "invoice history", "show my orders", "past orders", "order history"
+   Triggers: "show my invoices", "invoice history", "view invoices", "invoices", "my invoices", "receipts", "bills"
    Token: [[GET_INVOICES]]
 
 3. VIEW SPECIFIC INVOICE:

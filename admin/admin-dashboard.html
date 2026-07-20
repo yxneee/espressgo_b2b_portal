@@ -723,73 +723,103 @@
 
   <!-- Product Edit Modal -->
   <div id="product-edit-modal" class="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal-card" style="max-width: 500px;">
-      <div class="modal-header">
-        <h2 style="margin:0;font-size:1.2rem;color:var(--brown);" id="product-modal-title">Edit Product</h2>
+    <div class="modal-card" style="max-width: 620px; max-height: 85vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 14px;">
+      <div class="modal-header" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #EDE8E3; flex-shrink: 0; background: #FFF;">
+        <div>
+          <h2 style="margin:0;font-size:1.15rem;color:var(--brown);" id="product-modal-title">Edit Product Details</h2>
+          <p style="margin:2px 0 0 0;font-size:11px;color:var(--muted);">Update catalog information, ingredients, and pouch styling.</p>
+        </div>
         <button class="btn-ghost" onclick="closeProductModal()" style="font-size:1.5rem;padding:0;line-height:1;border:none;background:none;cursor:pointer;">&times;</button>
       </div>
-      <form id="product-form" onsubmit="saveProductForm(event)" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
+
+      <!-- Tab Switcher Bar -->
+      <div style="display:flex;border-bottom:1px solid #EDE8E3;background:#FAF8F5;padding:0 1.5rem;flex-shrink:0;gap:0.5rem;">
+        <button type="button" class="prod-modal-tab" id="prod-tab-btn-overview" onclick="switchProductModalTab('overview')" style="padding:0.65rem 1rem;font-size:12px;font-weight:600;color:var(--brown);border:none;border-bottom:2px solid var(--brown);background:none;cursor:pointer;">📦 General Info</button>
+        <button type="button" class="prod-modal-tab" id="prod-tab-btn-pouch" onclick="switchProductModalTab('pouch')" style="padding:0.65rem 1rem;font-size:12px;font-weight:600;color:var(--muted);border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;">🌱 Pouch Details</button>
+        <button type="button" class="prod-modal-tab" id="prod-tab-btn-visual" onclick="switchProductModalTab('visual')" style="padding:0.65rem 1rem;font-size:12px;font-weight:600;color:var(--muted);border:none;border-bottom:2px solid transparent;background:none;cursor:pointer;">🎨 Visual Branding</button>
+      </div>
+
+      <form id="product-form" onsubmit="saveProductForm(event)" style="padding:1.5rem;overflow-y:auto;flex-grow:1;display:flex;flex-direction:column;gap:1rem;">
         <input type="hidden" id="edit-product-id">
-        
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-          <div>
-            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Product ID</label>
-            <input type="text" id="prod-id" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+
+        <!-- TAB 1: General Info -->
+        <div id="prod-modal-tab-overview" class="prod-modal-tab-content" style="display:flex;flex-direction:column;gap:1rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Product ID</label>
+              <input type="text" id="prod-id" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">SKU</label>
+              <input type="text" id="prod-sku" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+            </div>
           </div>
+
           <div>
-            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">SKU</label>
-            <input type="text" id="prod-sku" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Name</label>
+            <input type="text" id="prod-name" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+          </div>
+
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Subtitle</label>
+            <input type="text" id="prod-subtitle" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Caffeine</label>
+              <input type="text" id="prod-caffeine" placeholder="~60mg caffeine" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Format</label>
+              <input type="text" id="prod-format" placeholder="Gel pouch · 25ml" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Shelf Life</label>
+              <input type="text" id="prod-shelflife" placeholder="12-month shelf life" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Stock (Cartons)</label>
+              <input type="number" id="prod-stock" min="0" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Status</label>
+              <select id="prod-active" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;height:32px;">
+                <option value="true">Active (In Catalog)</option>
+                <option value="false">Coming Soon (Inactive)</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Coming Soon Hint (If Inactive)</label>
+            <input type="text" id="prod-hint" placeholder="Matcha + espresso blend — Q3 2026" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
           </div>
         </div>
 
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Name</label>
-          <input type="text" id="prod-name" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
-        </div>
-
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Subtitle</label>
-          <input type="text" id="prod-subtitle" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+        <!-- TAB 2: Pouch Details -->
+        <div id="prod-modal-tab-pouch" class="prod-modal-tab-content" style="display:none;flex-direction:column;gap:1rem;">
           <div>
-            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Caffeine</label>
-            <input type="text" id="prod-caffeine" placeholder="~60mg caffeine" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">🌱 Ingredients</label>
+            <textarea id="prod-ingredients" rows="3" placeholder="Arabica Soluble Coffee, Oat Milk Powder, Erythritol..." style="width:100%;padding:0.5rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;font-family:inherit;resize:vertical;"></textarea>
           </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Format</label>
-            <input type="text" id="prod-format" placeholder="Gel pouch · 25ml" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Shelf Life</label>
-            <input type="text" id="prod-shelflife" placeholder="12-month shelf life" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-          <div>
-            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Stock (Cartons)</label>
-            <input type="number" id="prod-stock" min="0" required style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Status</label>
-            <select id="prod-active" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;height:32px;">
-              <option value="true">Active (In Catalog)</option>
-              <option value="false">Coming Soon (Inactive)</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Coming Soon Hint (If Inactive)</label>
-          <input type="text" id="prod-hint" placeholder="Matcha + espresso blend — Q3 2026" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:13px;">
-        </div>
-
-        <!-- Custom Image vs Dynamic SVG Pouch -->
-        <div style="border-top:1px solid #F0EAE4;padding-top:1rem;">
-          <h3 style="font-size:13px;color:var(--brown);margin-bottom:0.75rem;">Product Visual Asset</h3>
           
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">📊 Nutrition (Per 50g)</label>
+            <input type="text" id="prod-nutrition" placeholder="Energy: 28 kcal · Carbs: 12g · Sugar: 1g · Fat: 0.5g · Caffeine: ~60mg" style="width:100%;padding:0.4rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;">
+          </div>
+          
+          <div>
+            <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">💡 Key Benefits</label>
+            <textarea id="prod-benefits" rows="3" placeholder="Rich, creamy oat milk blend. Retort-sterilised for a 10-month shelf life..." style="width:100%;padding:0.5rem 0.6rem;border:1px solid #EDE8E3;border-radius:8px;font-size:12px;font-family:inherit;resize:vertical;"></textarea>
+          </div>
+        </div>
+
+        <!-- TAB 3: Visual Branding -->
+        <div id="prod-modal-tab-visual" class="prod-modal-tab-content" style="display:none;flex-direction:column;gap:1rem;">
           <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1rem;">
             <div>
               <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:0.25rem;display:block;">Custom Image URL (Overrides SVG Pouch)</label>
@@ -799,22 +829,22 @@
               <input type="file" id="prod-image-file" accept="image/*" onchange="handleProductImageUpload(event)" style="font-size:12px;">
             </div>
             
-            <div style="display:flex;flex-direction:column;gap:0.35rem;">
+            <div style="display:flex;flex-direction:column;gap:0.5rem;background:#FAF8F5;padding:0.75rem;border-radius:8px;">
               <label style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;">Dynamic Pouch Customizer</label>
               <div style="display:flex;align-items:center;gap:0.5rem;font-size:12px;">
-                <input type="color" id="prod-color-pouch" value="#C8580A" style="width:28px;height:24px;border:none;padding:0;cursor:pointer;"> Pouch
+                <input type="color" id="prod-color-pouch" value="#C8580A" style="width:28px;height:24px;border:none;padding:0;cursor:pointer;"> Pouch Body
               </div>
               <div style="display:flex;align-items:center;gap:0.5rem;font-size:12px;">
-                <input type="color" id="prod-color-accent" value="#8B3A00" style="width:28px;height:24px;border:none;padding:0;cursor:pointer;"> Accent
+                <input type="color" id="prod-color-accent" value="#8B3A00" style="width:28px;height:24px;border:none;padding:0;cursor:pointer;"> Accent Cap
               </div>
               <div style="display:flex;align-items:center;gap:0.5rem;font-size:12px;">
-                <input type="color" id="prod-color-label" value="#F5E0C8" style="width:28px;height:24px;border:none;padding:0;cursor:pointer;"> Label
+                <input type="color" id="prod-color-label" value="#F5E0C8" style="width:28px;height:24px;border:none;padding:0;cursor:pointer;"> Label Text
               </div>
             </div>
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:0.75rem;border-top:1px solid #F0EAE4;padding-top:1rem;margin-top:0.5rem;">
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;border-top:1px solid #F0EAE4;padding-top:1rem;margin-top:auto;flex-shrink:0;">
           <button type="button" class="btn-ghost" onclick="closeProductModal()" style="border:1px solid #EDE8E3;border-radius:8px;padding:0.4rem 1rem;font-size:13px;">Cancel</button>
           <button type="submit" class="btn-amber" style="border-radius:8px;padding:0.4rem 1.25rem;font-size:13px;">Save Product</button>
         </div>

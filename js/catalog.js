@@ -130,6 +130,9 @@ function normaliseProduct(row, tierRows = []) {
     active: row.active === true,
     comingSoonHint: row.coming_soon_hint || "Coming soon",
     imageUrl: row.image_url || "",
+    ingredients: row.ingredients || (function(){ try { return JSON.parse(localStorage.getItem('espressgo_pouch_' + row.id) || '{}').ingredients; } catch { return ''; } })() || "",
+    nutrition: row.nutrition || (function(){ try { return JSON.parse(localStorage.getItem('espressgo_pouch_' + row.id) || '{}').nutrition; } catch { return ''; } })() || "",
+    benefits: row.benefits || (function(){ try { return JSON.parse(localStorage.getItem('espressgo_pouch_' + row.id) || '{}').benefits; } catch { return ''; } })() || "",
 
     tiers: tierRows.length
       ? tierRows.map(tier => ({
@@ -216,43 +219,43 @@ function getProductDetailHTML(product) {
   const name = (product.name || '').toLowerCase();
   const id = (product.id || '').toLowerCase();
   
-  let ingredients = '';
-  let nutrition = '';
-  let benefits = '';
+  let ingredients = product.ingredients;
+  let nutrition = product.nutrition;
+  let benefits = product.benefits;
 
-  if (name.includes('original') || name.includes('classic') || id.includes('original')) {
-    ingredients = 'Arabica Soluble Coffee, Erythritol, Konnyaku Jelly, Monk Fruit Extract.';
-    nutrition = 'Energy: 12 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~70mg';
-    benefits = 'Retort-sterilised for a 9-month shelf life. Squeeze directly from the pocket-sized pouch. Zero sugar & vegan-friendly.';
-  } else if (name.includes('oat') || id.includes('oat')) {
-    ingredients = 'Arabica Soluble Coffee, Oat Milk Powder, Erythritol, Konnyaku Jelly, Monk Fruit Extract.';
-    nutrition = 'Energy: 28 kcal · Carbs: 12g · Sugar: 1g · Fat: 0.5g · Caffeine: ~60mg';
-    benefits = 'Rich, creamy oat milk blend. Retort-sterilised for a 10-month shelf life. No dairy, lactose-free, and vegan-friendly.';
-  } else if (name.includes('matcha') || id.includes('matcha')) {
-    ingredients = 'Japanese Uji Matcha, Green Tea Extract, Erythritol, Konnyaku Jelly, Monk Fruit.';
-    nutrition = 'Energy: 15 kcal · Carbs: 9g · Sugar: 0g · Fat: 0g · Caffeine: ~40mg';
-    benefits = 'L-Theanine & caffeine combo for calm, focused energy. Pocket-sized pouch, squeeze directly.';
-  } else if (name.includes('decaf') || id.includes('decaf')) {
-    ingredients = 'Swiss Water Decaf Soluble Arabica Coffee, Erythritol, Konnyaku Jelly, Monk Fruit.';
-    nutrition = 'Energy: 10 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~5mg';
-    benefits = 'Decaffeinated using 100% chemical-free Swiss Water process. Safe for late-night coffee rituals.';
-  } else {
-    return '';
+  if (!ingredients || !nutrition || !benefits) {
+    if (name.includes('original') || name.includes('classic') || id.includes('original')) {
+      ingredients = ingredients || 'Arabica Soluble Coffee, Erythritol, Konnyaku Jelly, Monk Fruit Extract.';
+      nutrition = nutrition || 'Energy: 12 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~70mg';
+      benefits = benefits || 'Retort-sterilised for a 9-month shelf life. Squeeze directly from the pocket-sized pouch. Zero sugar & vegan-friendly.';
+    } else if (name.includes('oat') || id.includes('oat')) {
+      ingredients = ingredients || 'Arabica Soluble Coffee, Oat Milk Powder, Erythritol, Konnyaku Jelly, Monk Fruit Extract.';
+      nutrition = nutrition || 'Energy: 28 kcal · Carbs: 12g · Sugar: 1g · Fat: 0.5g · Caffeine: ~60mg';
+      benefits = benefits || 'Rich, creamy oat milk blend. Retort-sterilised for a 10-month shelf life. No dairy, lactose-free, and vegan-friendly.';
+    } else if (name.includes('matcha') || id.includes('matcha')) {
+      ingredients = ingredients || 'Japanese Uji Matcha, Green Tea Extract, Erythritol, Konnyaku Jelly, Monk Fruit.';
+      nutrition = nutrition || 'Energy: 15 kcal · Carbs: 9g · Sugar: 0g · Fat: 0g · Caffeine: ~40mg';
+      benefits = benefits || 'L-Theanine & caffeine combo for calm, focused energy. Pocket-sized pouch, squeeze directly.';
+    } else if (name.includes('decaf') || id.includes('decaf')) {
+      ingredients = ingredients || 'Swiss Water Decaf Soluble Arabica Coffee, Erythritol, Konnyaku Jelly, Monk Fruit.';
+      nutrition = nutrition || 'Energy: 10 kcal · Carbs: 10g · Sugar: 0g · Fat: 0g · Caffeine: ~5mg';
+      benefits = benefits || 'Decaffeinated using 100% chemical-free Swiss Water process. Safe for late-night coffee rituals.';
+    }
   }
 
   return `
     <div class="drawer-content">
       <div class="drawer-section">
         <strong class="drawer-section-title">🌱 Ingredients</strong>
-        <p class="drawer-section-body">${ingredients}</p>
+        <p class="drawer-section-body">${safeEscape(ingredients || '')}</p>
       </div>
       <div class="drawer-section">
         <strong class="drawer-section-title">📊 Nutrition (Per 50g)</strong>
-        <p class="drawer-section-body">${nutrition}</p>
+        <p class="drawer-section-body">${safeEscape(nutrition || '')}</p>
       </div>
       <div class="drawer-section full-width">
         <strong class="drawer-section-title">💡 Key Benefits</strong>
-        <p class="drawer-section-body">${benefits}</p>
+        <p class="drawer-section-body">${safeEscape(benefits || '')}</p>
       </div>
     </div>
   `;

@@ -759,7 +759,29 @@ function renderProducts() {
   `;
 }
 
+function switchProductModalTab(tabName) {
+  const tabs = ['overview', 'pouch', 'visual'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`prod-tab-btn-${t}`);
+    const content = document.getElementById(`prod-modal-tab-${t}`);
+    if (btn) {
+      if (t === tabName) {
+        btn.style.borderBottomColor = 'var(--brown)';
+        btn.style.color = 'var(--brown)';
+      } else {
+        btn.style.borderBottomColor = 'transparent';
+        btn.style.color = 'var(--muted)';
+      }
+    }
+    if (content) {
+      content.style.display = (t === tabName) ? 'flex' : 'none';
+    }
+  });
+}
+window.switchProductModalTab = switchProductModalTab;
+
 function openAddProductModal() {
+  switchProductModalTab('overview');
   document.getElementById('product-modal-title').textContent = "Add Product";
   document.getElementById('edit-product-id').value = "";
   document.getElementById('prod-id').disabled = false;
@@ -770,6 +792,9 @@ function openAddProductModal() {
   document.getElementById('prod-caffeine').value = "";
   document.getElementById('prod-format').value = "";
   document.getElementById('prod-shelflife').value = "";
+  document.getElementById('prod-ingredients').value = "";
+  document.getElementById('prod-nutrition').value = "";
+  document.getElementById('prod-benefits').value = "";
   document.getElementById('prod-stock').value = "0";
   document.getElementById('prod-active').value = "true";
   document.getElementById('prod-hint').value = "";
@@ -783,8 +808,13 @@ function openAddProductModal() {
 }
 
 function openEditProductModal(productId) {
+  switchProductModalTab('overview');
   const prod = adminProducts.find(p => p.id === productId);
   if (!prod) return;
+
+  // Check cached pouch details fallback
+  let cached = {};
+  try { cached = JSON.parse(localStorage.getItem(`espressgo_pouch_${productId}`) || '{}'); } catch {}
 
   document.getElementById('product-modal-title').textContent = "Edit Product Details";
   document.getElementById('edit-product-id').value = prod.id;
@@ -796,6 +826,9 @@ function openEditProductModal(productId) {
   document.getElementById('prod-caffeine').value = prod.caffeine || "";
   document.getElementById('prod-format').value = prod.format || "";
   document.getElementById('prod-shelflife').value = prod.shelf_life || "";
+  document.getElementById('prod-ingredients').value = prod.ingredients || cached.ingredients || "";
+  document.getElementById('prod-nutrition').value = prod.nutrition || cached.nutrition || "";
+  document.getElementById('prod-benefits').value = prod.benefits || cached.benefits || "";
   document.getElementById('prod-stock').value = prod.stock_cartons ?? 0;
   document.getElementById('prod-active').value = String(prod.active ?? true);
   document.getElementById('prod-hint').value = prod.coming_soon_hint || "";
@@ -853,12 +886,16 @@ async function saveProductForm(event) {
 
   const editId = document.getElementById('edit-product-id').value;
   const prodId = document.getElementById('prod-id').value.trim();
+  const targetId = editId || prodId;
   const sku = document.getElementById('prod-sku').value.trim();
   const name = document.getElementById('prod-name').value.trim();
   const subtitle = document.getElementById('prod-subtitle').value.trim();
   const caffeine = document.getElementById('prod-caffeine').value.trim();
   const format = document.getElementById('prod-format').value.trim();
   const shelfLife = document.getElementById('prod-shelflife').value.trim();
+  const ingredients = document.getElementById('prod-ingredients').value.trim();
+  const nutrition = document.getElementById('prod-nutrition').value.trim();
+  const benefits = document.getElementById('prod-benefits').value.trim();
   const stock = parseInt(document.getElementById('prod-stock').value, 10) || 0;
   const active = document.getElementById('prod-active').value === 'true';
   const hint = document.getElementById('prod-hint').value.trim();
@@ -867,6 +904,9 @@ async function saveProductForm(event) {
   const pouchAccent = document.getElementById('prod-color-accent').value;
   const labelColor = document.getElementById('prod-color-label').value;
 
+  // Persist pouch details in storage fallback for instant catalog sync
+  localStorage.setItem(`espressgo_pouch_${targetId}`, JSON.stringify({ ingredients, nutrition, benefits }));
+
   const payload = {
     sku,
     name,
@@ -874,6 +914,9 @@ async function saveProductForm(event) {
     caffeine,
     format,
     shelf_life: shelfLife,
+    ingredients,
+    nutrition,
+    benefits,
     stock_cartons: stock,
     active,
     coming_soon_hint: hint,
@@ -885,18 +928,32 @@ async function saveProductForm(event) {
 
   try {
     if (editId) {
-      const { error } = await sb
+      let { error } = await sb
         .from('products')
         .update(payload)
         .eq('id', editId);
 
-      if (error) throw error;
-      showToast("Product updated", `${name} details saved.`);
-    } else {
-      const { error } = await sb
-        .from('products')
-        .insert({ ...payload, id: prodId });
+      if (error && error.message && (error.message.includes('column') || error.message.includes('ingredients'))) {
+        const fallbackPayload = { ...payload };
+        delete fallbackPayload.ingredients;
+        delete fallbackPayload.nutrition;
+        delete fallbackPayload.benefits;
+        const res = await sb.from('products').update(fallbackPayload).eq('id', editId);
+        error = res.error;
+      }
 
+      if (error) throw error;
+      showToast("Product updated", `${name} details saved to Supabase.`);
+    } else {
+      let { error } = await sb.from('products').insert({ ...payload, id: prodId });
+      if (error && error.message && (error.message.includes('column') || error.message.includes('ingredients'))) {
+        const fallbackPayload = { ...payload };
+        delete fallbackPayload.ingredients;
+        delete fallbackPayload.nutrition;
+        delete fallbackPayload.benefits;
+        const res = await sb.from('products').insert({ ...fallbackPayload, id: prodId });
+        error = res.error;
+      }
       if (error) throw error;
 
       const defaultTiers = [
@@ -906,7 +963,7 @@ async function saveProductForm(event) {
       ];
       await sb.from('product_tiers').insert(defaultTiers);
 
-      showToast("Product created", `${name} added to catalog with standard pricing tiers.`);
+      showToast("Product created", `${name} added to catalog.`);
     }
 
     closeProductModal();

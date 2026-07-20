@@ -1408,12 +1408,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Helper intent matchers
       function checkInvoiceIntent(q, raw) {
-        const specificMatch = raw.match(/(?:invoice|order|bill|receipt)\s*#?\s*([a-f0-9-]+|\d+)/i) ||
-                              /#([a-f0-9-]+|\d+)/i.exec(raw);
+        const specificMatch = raw.match(/(?:invoice|bill|receipt)\s*#?\s*([a-f0-9-]+|\d+)/i) ||
+                              /invoice\s*#?\s*([a-f0-9-]+|\d+)/i.exec(raw);
         if (specificMatch && specificMatch[1] && !/\b(history|all|my)\b/i.test(specificMatch[1])) {
           return { type: 'SPECIFIC', id: specificMatch[1] };
         }
-        const pattern = /\b(invoice|invoices|bill|bills|receipt|receipts|statement|statements)\b|\b(past order|past orders|previous order|previous orders|order history|orders history|my orders|show orders|view orders|all orders|get orders|check orders|see orders|list orders)\b/i;
+        const pattern = /\b(invoice|invoices|bill|bills|receipt|receipts|statement|statements|invoice history|my invoices|view invoice|show invoice|check invoice|get invoice)\b/i;
         if (pattern.test(q)) return { type: 'ALL' };
         return null;
       }
@@ -1427,7 +1427,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       function checkPlaceOrderIntent(q) {
-        return /\b(place order|place my order|confirm order|confirm my order|checkout|check out|submit order|submit my order|go ahead and order|order now|complete order|finalize order|finalise order|buy now|pay now)\b/i.test(q);
+        return /\b(place order|place my order|confirm order|confirm my order|checkout|check out|submit order|submit my order|go ahead and order|order now|complete order|finalize order|finalise order|buy now|pay now|order|ordering|i want to order|want to order|order products|order coffee)\b/i.test(q);
       }
 
       function checkCartIntent(q) {
@@ -1711,6 +1711,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div>
             <div style="font-weight:600;font-size:12px;color:#1f2937;">Order #${escapeHTML(String(o.id))}</div>
             <div style="font-size:11px;color:#6b7280;margin-top:2px;">${fmtDate(o.date_ordered)} · ${o.total_cartons || 0} ctn</div>
+            <button class="view-invoice-btn" data-order-id="${escapeHTML(String(o.id))}" style="margin-top:5px;padding:3px 9px;background:#ffffff;border:1px solid rgba(200,133,58,0.4);border-radius:6px;font-size:10px;font-weight:600;color:#c8580a;cursor:pointer;display:inline-flex;align-items:center;gap:3px;">📄 View Details</button>
           </div>
           <div style="text-align:right;">
             <div style="font-weight:700;font-size:12px;color:#92400e;">SGD $${Number(o.total_amount || 0).toFixed(2)}</div>
@@ -1754,11 +1755,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const cycleTotal = Array.isArray(sub.subscription_items)
           ? sub.subscription_items.reduce((s, i) => s + (i.cartons || 0) * (i.price_per_carton || 0), 0)
           : 0;
+        const statusClean = String(sub.status || 'active').toLowerCase();
+        const actionBtn = statusClean === 'paused'
+          ? `<button class="resume-sub-btn" data-sub-id="${escapeHTML(String(sub.id))}" style="margin-top:6px;padding:4px 10px;background:#dcfce7;color:#166534;border:1px solid #22c55e;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">▶ Resume Subscription</button>`
+          : `<button class="pause-sub-btn" data-sub-id="${escapeHTML(String(sub.id))}" style="margin-top:6px;padding:4px 10px;background:#fef3c7;color:#92400e;border:1px solid #f59e0b;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">⏸ Pause Subscription</button>`;
+
         return `<div style="padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.07);">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
             <div>
               <div style="font-weight:600;font-size:12px;color:#1f2937;">${escapeHTML(String(sub.frequency || 'Monthly'))} Subscription</div>
-              <div style="font-size:11px;color:#6b7280;margin-top:2px;">ID: ${escapeHTML(String(sub.id))}</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px;">ID: #${escapeHTML(String(sub.id))}</div>
+              <div style="margin-top:4px;">${actionBtn}</div>
             </div>
             <div style="text-align:right;">
               <div style="font-weight:700;font-size:12px;color:#92400e;">SGD $${cycleTotal.toFixed(2)}/cycle</div>
@@ -2202,6 +2209,28 @@ document.addEventListener('DOMContentLoaded', () => {
   faqUserInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       handleUserMessage(faqUserInput.value);
+    }
+  });
+
+  // Global click delegate for inline card buttons (Pause/Resume Subscriptions, View Invoice Details)
+  faqChatBody.addEventListener('click', (e) => {
+    const pauseBtn = e.target.closest('.pause-sub-btn');
+    if (pauseBtn) {
+      const subId = pauseBtn.getAttribute('data-sub-id');
+      if (subId) handleUserMessage(`pause subscription ${subId}`);
+      return;
+    }
+    const resumeBtn = e.target.closest('.resume-sub-btn');
+    if (resumeBtn) {
+      const subId = resumeBtn.getAttribute('data-sub-id');
+      if (subId) handleUserMessage(`resume subscription ${subId}`);
+      return;
+    }
+    const viewInvoiceBtn = e.target.closest('.view-invoice-btn');
+    if (viewInvoiceBtn) {
+      const orderId = viewInvoiceBtn.getAttribute('data-order-id');
+      if (orderId) handleUserMessage(`show invoice ${orderId}`);
+      return;
     }
   });
 
