@@ -224,19 +224,21 @@ function orderListHTML(list, suffix = '') {
               Items
             </div>
 
-            ${(order.items || []).map(item => `
-              <div class="order-item-row">
-
-                <span style="color:var(--brown);">
-                  ${Number(item.cartons || 0)} cartons × ${escapeHTML(item.name || '')}
-                </span>
-
-                <span style="color:var(--brown-lt);">
-                  SGD $${(Number(item.cartons || 0) * Number(item.pricePerCarton || 0)).toFixed(2)}
-                </span>
-
-              </div>
-            `).join('')}
+            ${(order.items || []).map(item => {
+              const qty = Number(item.cartons ?? item.qty ?? item.quantity ?? 1);
+              const pName = item.name || item.product_name || (item.products ? item.products.name : '') || 'ESPRESSGO Product';
+              const uPrice = Number(item.pricePerCarton ?? item.price_per_carton ?? item.price ?? 0);
+              return `
+                <div class="order-item-row">
+                  <span style="color:var(--brown);">
+                    ${qty} carton${qty !== 1 ? 's' : ''} × ${escapeHTML(pName)}
+                  </span>
+                  <span style="color:var(--brown-lt);">
+                    SGD $${(qty * uPrice).toFixed(2)}
+                  </span>
+                </div>
+              `;
+            }).join('')}
 
             <div
               style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #F0EAE4;padding-top:.6rem;margin-top:.5rem;">
@@ -1598,13 +1600,11 @@ async function initAccountPage() {
 }
 
 async function loadSubscriptions() {
-  // 1. Use 'sb' (your Supabase connection name)
-  // 2. Use 'user_id' (to match your SQL schema)
   const { data, error } = await sb
     .from("subscriptions")
     .select(`
       *,
-      subscription_items (*)
+      subscription_items (*, products(*))
     `)
     .eq("user_id", user.id) 
     .order("created_at", { ascending: false });
@@ -1614,7 +1614,7 @@ async function loadSubscriptions() {
     return;
   }
 
-  console.log("Subscriptions found:", data); // Check your console for this!
+  console.log("Subscriptions found:", data);
   renderSubscriptions(data || []);
 }
 
@@ -1647,11 +1647,14 @@ function renderSubscriptions(subscriptions) {
 
       ${subscriptions.map(sub => {
         const isActive = sub.status === 'active';
-        const dotColor = isActive ? '#4ade80' : '#fbbf24'; // Matches your Order dots
+        const dotColor = isActive ? '#4ade80' : '#fbbf24';
         const date = new Date(sub.created_at).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
         
-        // Calculate total amount for the subscription
-        const totalAmount = (sub.subscription_items || []).reduce((sum, item) => sum + (item.cartons * item.price_per_carton), 0);
+        const totalAmount = (sub.subscription_items || []).reduce((sum, item) => {
+          const q = Number(item.cartons ?? item.qty ?? item.quantity ?? 1);
+          const p = Number(item.price_per_carton ?? item.price ?? 0);
+          return sum + (q * p);
+        }, 0);
 
         return `
           <div class="order-row">
@@ -1681,16 +1684,21 @@ function renderSubscriptions(subscriptions) {
               <div class="order-items">
                 <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem;">Subscription Items</div>
                 
-                ${(sub.subscription_items || []).map(item => `
-                  <div class="order-item-row">
-                    <span style="color:var(--brown);">
-                      ${item.cartons} cartons × ${item.name || 'Product'}
-                    </span>
-                    <span style="color:var(--brown-lt);">
-                      SGD $${(item.cartons * item.price_per_carton).toFixed(2)}
-                    </span>
-                  </div>
-                `).join('')}
+                ${(sub.subscription_items || []).map(item => {
+                  const q = Number(item.cartons ?? item.qty ?? item.quantity ?? 1);
+                  const pName = item.name || item.product_name || (item.products ? item.products.name : '') || 'ESPRESSGO Product';
+                  const unitP = Number(item.price_per_carton ?? item.price ?? 0);
+                  return `
+                    <div class="order-item-row">
+                      <span style="color:var(--brown);">
+                        ${q} carton${q !== 1 ? 's' : ''} × ${escapeHTML(pName)}
+                      </span>
+                      <span style="color:var(--brown-lt);">
+                        SGD $${(q * unitP).toFixed(2)}
+                      </span>
+                    </div>
+                  `;
+                }).join('')}
               </div>
 
               <div style="display:flex;gap:.6rem;">

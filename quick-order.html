@@ -79,6 +79,38 @@
         </div>
       </div>
 
+      <!-- ── 1-Click Order Presets & Past Orders ────────────────────────── -->
+      <div id="quick-reorder-section" style="margin-bottom:1.75rem;background:#FFF;border:1px solid #EDE8E3;border-radius:18px;padding:1.25rem 1.5rem;box-shadow:0 4px 16px rgba(44,24,16,0.04);">
+        <div style="margin-bottom:1.25rem;">
+          <h2 style="font-size:1.1rem;color:var(--brown);margin:0;display:flex;align-items:center;gap:0.4rem;font-weight:700;">
+            <span>⚡</span> 1-Click Quick Reorder & Presets
+          </h2>
+          <p style="font-size:12px;color:var(--muted);margin:3px 0 0 0;">Select a past order or preset template below — it will instantly populate into the adjustable section underneath!</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:1.25rem;">
+          <!-- Subsection 1: Past Order History (Max 2) -->
+          <div id="past-orders-container" style="display:none;">
+            <div style="font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.35rem;">
+              <span>📋</span> Reorder From Past Orders (Recent 1–2 Orders)
+            </div>
+            <div id="past-orders-list" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:1rem;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Subsection 2: Standard Presets -->
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--brown-lt);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.35rem;">
+              <span>⚡</span> Standard Order Presets
+            </div>
+            <div id="standard-presets-list" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:1rem;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Side-by-side layout: product list + summary sidebar -->
       <div class="qo-layout">
 

@@ -19,6 +19,13 @@
    Page state
    ============================================================ */
 
+function safeEscape(str) {
+  if (typeof escapeHTML === 'function') return escapeHTML(str);
+  if (typeof window.escapeHTML === 'function') return window.escapeHTML(str);
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 const db = window.sb || window.supabaseClient;
 
 let user = null;
@@ -28,6 +35,9 @@ let comingSoon = [];
 
 // Per-product quantity state: { productId: number }
 let quantities = {};
+let activePresetId = null;
+let currentPresets = [];
+let cachedUserOrders = [];
 
 
 /* ============================================================
@@ -342,6 +352,7 @@ function renderProductRows() {
                   min="0"
                   value="${qty || ''}"
                   placeholder="0"
+                  oninput="setQty('${p.id}', this.value)"
                   onchange="setQty('${p.id}', this.value)"
                   aria-label="${escapeHTML(p.name)} quantity in cartons"/>
 
@@ -462,33 +473,44 @@ function renderSummary() {
   }
 
   if (hasLines) {
-    summaryLines.innerHTML = lines.map(({ p, qty, tier, subtotal }) => `
-      <div class="summary-line">
+    summaryLines.innerHTML = lines.map(({ p, qty, tier, subtotal }) => {
+      const imgUrl = p.imageUrl || p.image_url;
+      let visualHtml = '';
+      if (imgUrl) {
+        visualHtml = `<img src="${safeEscape(imgUrl)}" alt="${safeEscape(p.name || '')}" style="width:24px;height:24px;object-fit:contain;border-radius:4px;" />`;
+      } else if (typeof miniPouchSVG === 'function') {
+        visualHtml = miniPouchSVG(p.pouchColor || '#C8580A', p.pouchAccent || '#8B3A00', 20);
+      } else {
+        visualHtml = `<div class="summary-dot" style="background:${p.pouchColor || '#C8580A'};"></div>`;
+      }
 
-        <div
-          class="summary-dot"
-          style="background:${p.pouchColor};">
-        </div>
+      return `
+        <div class="summary-line">
 
-        <div style="flex:1;min-width:0;">
-
-          <div
-            style="font-size:11px;color:var(--brown);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            ${escapeHTML(p.name)}
+          <div class="summary-thumb" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${visualHtml}
           </div>
 
-          <div style="font-size:10px;color:var(--muted);">
-            ${qty} ctn × SGD $${tier.price}
+          <div style="flex:1;min-width:0;">
+
+            <div
+              style="font-size:11.5px;font-weight:600;color:var(--brown);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              ${escapeHTML(p.name)}
+            </div>
+
+            <div style="font-size:10.5px;color:var(--muted);">
+              ${qty} ctn × SGD $${tier.price}
+            </div>
+
           </div>
 
+          <span style="font-size:12px;font-weight:700;color:var(--brown);white-space:nowrap;">
+            SGD $${subtotal.toFixed(2)}
+          </span>
+
         </div>
-
-        <span style="font-size:12px;color:var(--brown);white-space:nowrap;">
-          SGD $${subtotal.toFixed(2)}
-        </span>
-
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     summaryTotals.style.display = 'flex';
 
@@ -570,154 +592,159 @@ function renderAll() {
 
 
 /* ============================================================
-   Place order with Stripe Redirect
+   Action buttons event binding (Stripe, Credit, Clear)
    ============================================================ */
-/* ============================================================
-   Place order with Stripe Redirect (Pay Online)
-   ============================================================ */
-document.getElementById('place-order-btn').addEventListener('click', async () => {
+function bindActionButtons() {
   const placeBtn = document.getElementById('place-order-btn');
-  const creditBtn = document.getElementById('use-credit-btn');
-  const lines = getOrderLines();
+  if (placeBtn && !placeBtn.dataset.bound) {
+    placeBtn.dataset.bound = 'true';
+    placeBtn.addEventListener('click', async () => {
+      const creditBtn = document.getElementById('use-credit-btn');
+      const lines = getOrderLines();
 
-  if (!lines.length) {
-    showToast('No items selected', 'Enter quantities before placing an order.', 'error');
-    return;
-  }
-
-  placeBtn.disabled = true;
-  placeBtn.textContent = 'Connecting...';
-  if (creditBtn) creditBtn.disabled = true;
-
-  try {
-    const refreshedUser = await Auth.refreshUser();
-    if (!refreshedUser) {
-      localStorage.setItem('redirectAfterLogin', 'quick-order.html');
-      window.location.href = 'login.html';
-      return;
-    }
-
-    const formattedCart = Object.entries(quantities).map(([productId, quantity]) => ({
-      product_id: productId,
-      quantity: quantity
-    }));
-
-    console.log("Quick Order - Sending to Stripe:", formattedCart);
-
-    const res = await apiFetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        cart: formattedCart,
-        profile: refreshedUser
-      })
-    });
-
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      throw new Error(data.error || "Failed to create payment session");
-    }
-
-  } catch (error) {
-    console.error('Quick Order Stripe Error:', error);
-    showToast('Order failed', error.message, 'error');
-  } finally {
-    if (placeBtn) {
-      placeBtn.disabled = false;
-      placeBtn.textContent = 'Pay Online (Card) →';
-    }
-    if (creditBtn) creditBtn.disabled = false;
-  }
-});
-
-/* ============================================================
-   Place order with B2B Credit
-   ============================================================ */
-const creditBtn = document.getElementById('use-credit-btn');
-if (creditBtn) {
-  creditBtn.addEventListener('click', async () => {
-    const placeBtn = document.getElementById('place-order-btn');
-    const lines = getOrderLines();
-
-    if (!lines.length) {
-      showToast('No items selected', 'Enter quantities before placing an order.', 'error');
-      return;
-    }
-
-    creditBtn.disabled = true;
-    creditBtn.textContent = 'Placing Order...';
-    if (placeBtn) placeBtn.disabled = true;
-
-    try {
-      const refreshedUser = await Auth.refreshUser();
-      if (!refreshedUser) {
-        localStorage.setItem('redirectAfterLogin', 'quick-order.html');
-        window.location.href = 'login.html';
+      if (!lines.length) {
+        showToast('No items selected', 'Enter quantities before placing an order.', 'error');
         return;
       }
 
-      const orderObj = {
-        totalCartons: getTotalCartons(lines),
-        totalAmount: getTotalAmount(lines),
-        status: 'pending',
-        notes: `Paid via B2B Credit Terms (${refreshedUser.paymentTerms})`,
-        paymentMethod: 'credit',
-        paymentStatus: 'unpaid',
-        creditTerms: refreshedUser.paymentTerms,
-        items: lines.map(line => ({
-          productId: line.p.id,
-          sku: line.p.sku,
-          name: line.p.name,
-          cartons: line.qty,
-          pricePerCarton: line.tier.price
-        }))
-      };
+      placeBtn.disabled = true;
+      placeBtn.textContent = 'Connecting...';
+      if (creditBtn) creditBtn.disabled = true;
 
-      const savedOrder = await Orders.add(orderObj);
-      console.log("Quick Order saved on credit terms:", savedOrder);
+      try {
+        const refreshedUser = await Auth.refreshUser();
+        if (!refreshedUser) {
+          localStorage.setItem('redirectAfterLogin', 'quick-order.html');
+          window.location.href = 'login.html';
+          return;
+        }
 
+        const formattedCart = Object.entries(quantities).map(([productId, quantity]) => ({
+          product_id: productId,
+          quantity: quantity
+        }));
+
+        console.log("Quick Order - Sending to Stripe:", formattedCart);
+
+        const res = await apiFetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            cart: formattedCart,
+            profile: refreshedUser
+          })
+        });
+
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error(data.error || "Failed to create payment session");
+        }
+
+      } catch (error) {
+        console.error('Quick Order Stripe Error:', error);
+        showToast('Order failed', error.message, 'error');
+      } finally {
+        if (placeBtn) {
+          placeBtn.disabled = false;
+          placeBtn.textContent = 'Pay Online (Card) →';
+        }
+        if (creditBtn) creditBtn.disabled = false;
+      }
+    });
+  }
+
+  const creditBtn = document.getElementById('use-credit-btn');
+  if (creditBtn && !creditBtn.dataset.bound) {
+    creditBtn.dataset.bound = 'true';
+    creditBtn.addEventListener('click', async () => {
+      const placeBtn = document.getElementById('place-order-btn');
+      const lines = getOrderLines();
+
+      if (!lines.length) {
+        showToast('No items selected', 'Enter quantities before placing an order.', 'error');
+        return;
+      }
+
+      creditBtn.disabled = true;
+      creditBtn.textContent = 'Placing Order...';
+      if (placeBtn) placeBtn.disabled = true;
+
+      try {
+        const refreshedUser = await Auth.refreshUser();
+        if (!refreshedUser) {
+          localStorage.setItem('redirectAfterLogin', 'quick-order.html');
+          window.location.href = 'login.html';
+          return;
+        }
+
+        const orderObj = {
+          totalCartons: getTotalCartons(lines),
+          totalAmount: getTotalAmount(lines),
+          status: 'pending',
+          notes: `Paid via B2B Credit Terms (${refreshedUser.paymentTerms})`,
+          paymentMethod: 'credit',
+          paymentStatus: 'unpaid',
+          creditTerms: refreshedUser.paymentTerms,
+          items: lines.map(line => ({
+            productId: line.p.id,
+            sku: line.p.sku,
+            name: line.p.name,
+            cartons: line.qty,
+            pricePerCarton: line.tier.price
+          }))
+        };
+
+        const savedOrder = await Orders.add(orderObj);
+        console.log("Quick Order saved on credit terms:", savedOrder);
+
+        quantities = {};
+        renderAll();
+
+        showToast('Order Placed', 'Your B2B Credit order has been submitted successfully.', 'success');
+        
+        setTimeout(() => {
+          window.location.href = 'account.html';
+        }, 2000);
+
+      } catch (error) {
+        console.error('Quick Order Credit Error:', error);
+        showToast('Order failed', error.message, 'error');
+      } finally {
+        if (creditBtn) {
+          creditBtn.disabled = false;
+          creditBtn.textContent = `Use B2B Credit (${user ? user.paymentTerms : 'Net 30'}) →`;
+        }
+        if (placeBtn) placeBtn.disabled = false;
+      }
+    });
+  }
+
+  const clearBtn = document.getElementById('clear-all-btn');
+  if (clearBtn && !clearBtn.dataset.bound) {
+    clearBtn.dataset.bound = 'true';
+    clearBtn.addEventListener('click', () => {
       quantities = {};
       renderAll();
-
-      showToast('Order Placed', 'Your B2B Credit order has been submitted successfully.', 'success');
-      
-      setTimeout(() => {
-        window.location.href = 'account.html';
-      }, 2000);
-
-    } catch (error) {
-      console.error('Quick Order Credit Error:', error);
-      showToast('Order failed', error.message, 'error');
-    } finally {
-      if (creditBtn) {
-        creditBtn.disabled = false;
-        creditBtn.textContent = `Use B2B Credit (${user.paymentTerms}) →`;
-      }
-      if (placeBtn) placeBtn.disabled = false;
-    }
-  });
+    });
+  }
 }
-
-
-/* ============================================================
-   Clear all quantities
-   ============================================================ */
-
-document.getElementById('clear-all-btn').addEventListener('click', () => {
-  quantities = {};
-  renderAll();
-});
-
 
 /* ============================================================
    Page initialisation
    ============================================================ */
 
 async function initQuickOrderPage() {
+  bindActionButtons();
+
+  // Load fallback products synchronously first so page is NEVER empty
+  loadFallbackProducts();
+  renderAll();
+  renderRecentOrders([]);
+
   const refreshedUser = await Auth.refreshUser();
 
   if (!refreshedUser) {
@@ -728,36 +755,139 @@ async function initQuickOrderPage() {
 
   user = refreshedUser;
 
-  // Pre-load user orders to compute spent credit
+  let userOrders = [];
   window.userSpentCredit = 0;
-  if (user.creditStatus === 'approved') {
-    try {
-      const myOrders = await Orders.forCurrentUser();
-      const creditOrders = myOrders.filter(o => o.paymentMethod === 'credit' && o.paymentStatus === 'unpaid');
+  try {
+    userOrders = await Orders.forCurrentUser();
+    if (user && user.creditStatus === 'approved' && userOrders) {
+      const creditOrders = userOrders.filter(o => o.paymentMethod === 'credit' && o.paymentStatus === 'unpaid');
       window.userSpentCredit = creditOrders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);
-    } catch (e) {
-      console.error("Failed to load orders to calculate spent credit:", e);
     }
+  } catch (e) {
+    console.warn("Failed to load user orders:", e);
   }
 
-  buildNav('quick-order');
-  buildFooter();
+  if (typeof buildNav === 'function') buildNav('quick-order');
+  if (typeof buildFooter === 'function') buildFooter();
 
   try {
     await loadProductsFromSupabase();
   } catch (error) {
     console.error("Failed to load products from Supabase for Quick Order:", error.message);
-    if (typeof showToast === "function") {
-      showToast(
-        "Could not load Supabase products",
-        "Using local product data for now.",
-        "error"
-      );
-    }
     loadFallbackProducts();
   }
 
   renderAll();
+  renderRecentOrders(userOrders);
+  bindActionButtons();
 }
+
+function renderRecentOrders(myOrders = null) {
+  if (myOrders !== null && Array.isArray(myOrders)) {
+    cachedUserOrders = myOrders;
+  } else {
+    myOrders = cachedUserOrders;
+  }
+
+  const pastContainer = document.getElementById('past-orders-list');
+  const pastWrapper = document.getElementById('past-orders-container');
+  const presetContainer = document.getElementById('standard-presets-list');
+
+  if (!presetContainer) return;
+
+  const pastPresets = [];
+  const standardPresets = [];
+
+  // Add Past User Orders if available (Max 2 as requested)
+  if (myOrders && myOrders.length > 0) {
+    myOrders.slice(0, 2).forEach((ord) => {
+      const itemsSummary = (ord.items || []).map(i => {
+        const cartons = i.cartons || i.qty || 0;
+        const name = i.name || (i.productId === 'espressgo-oatmilk' || i.product_id === 'espressgo-oatmilk' ? 'Oat Milk' : 'Original');
+        return `${cartons} ctn ${name}`;
+      }).join(', ');
+
+      const cartObj = {};
+      (ord.items || []).forEach(i => {
+        const pid = i.productId || i.product_id;
+        if (pid) cartObj[pid] = Number(i.cartons || i.qty || 0);
+      });
+
+      const orderIdStr = String(ord.id);
+      pastPresets.push({
+        id: `order-${ord.id}`,
+        name: `📋 Past Order #${orderIdStr.length > 8 ? orderIdStr.slice(0, 8) : orderIdStr}`,
+        tag: 'Past Order',
+        cart: cartObj,
+        summary: itemsSummary || 'Previous order configuration',
+        badge: `SGD $${Number(ord.totalAmount || 0).toFixed(2)}`
+      });
+    });
+  }
+
+  // Always include standard quick presets
+  standardPresets.push({
+    id: 'preset-weekly',
+    name: '⚡ Standard Restock',
+    tag: 'Preset',
+    cart: { 'espressgo-original': 10, 'espressgo-oatmilk': 10 },
+    summary: '10 ctn Original + 10 ctn Oat Milk',
+    badge: '20 Cartons'
+  });
+
+  standardPresets.push({
+    id: 'preset-bulk',
+    name: '📦 Tier 3 Max Bulk',
+    tag: 'Preset',
+    cart: { 'espressgo-original': 30, 'espressgo-oatmilk': 30 },
+    summary: '30 ctn Original + 30 ctn Oat Milk (Max Tier Rate)',
+    badge: '60 Cartons'
+  });
+
+  currentPresets = [...pastPresets, ...standardPresets];
+
+  // Render Past Orders
+  if (pastPresets.length > 0 && pastContainer && pastWrapper) {
+    pastWrapper.style.display = 'block';
+    pastContainer.innerHTML = pastPresets.map(p => renderPresetCardHtml(p)).join('');
+  } else if (pastWrapper) {
+    pastWrapper.style.display = 'none';
+  }
+
+  // Render Standard Presets
+  presetContainer.innerHTML = standardPresets.map(p => renderPresetCardHtml(p)).join('');
+}
+
+function renderPresetCardHtml(p) {
+  const isActive = activePresetId === p.id;
+  const isPast = p.tag === 'Past Order';
+
+  return `
+    <div class="preset-card ${isActive ? 'active' : ''}" onclick="applyOrderPreset('${safeEscape(p.id)}')" style="background:${isActive ? '#FFF7ED' : (isPast ? '#FAF6F0' : '#FAF8F5')};border:2px solid ${isActive ? 'var(--amber)' : '#EDE8E3'};border-radius:14px;padding:0.9rem 1.1rem;cursor:pointer;transition:all 0.2s;position:relative;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.35rem;">
+        <div style="font-size:12.5px;font-weight:700;color:var(--brown);">${safeEscape(p.name)}</div>
+        <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:12px;background:${isActive ? 'var(--amber)' : (isPast ? '#E5D6C5' : '#E0D5C8')};color:${isActive ? '#FFF' : 'var(--brown)'};">${safeEscape(p.badge)}</span>
+      </div>
+      <div style="font-size:11.5px;color:var(--brown-lt);line-height:1.35;">${safeEscape(p.summary)}</div>
+      <div style="margin-top:0.6rem;font-size:11px;font-weight:600;color:${isActive ? 'var(--amber)' : 'var(--brown-lt)'};display:flex;align-items:center;gap:0.3rem;">
+        ${isActive ? '✅ Loaded below — adjust quantities below if needed' : '👉 Click to load into section below'}
+      </div>
+    </div>
+  `;
+}
+
+function applyOrderPreset(presetId) {
+  const preset = currentPresets.find(p => p.id === presetId);
+  if (!preset) return;
+
+  activePresetId = presetId;
+  quantities = { ...preset.cart };
+  renderAll();
+  renderRecentOrders();
+  if (typeof showToast === 'function') {
+    showToast("Preset Loaded! ⚡", "Quantities updated in the adjustable section below.", "success");
+  }
+}
+window.applyOrderPreset = applyOrderPreset;
 
 initQuickOrderPage();

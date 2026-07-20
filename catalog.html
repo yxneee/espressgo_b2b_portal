@@ -37,7 +37,8 @@
           </h1>
 
           <p class="hero-desc">
-            Premium gel-based espresso shots formulated for peak performance. Per carton of 50 pouches · Volume discounts applied automatically as you order.
+            Premium gel-based espresso shots formulated for peak performance. Per carton of 50 pouches · Volume
+            discounts applied automatically as you order.
           </p>
 
           <!-- Product feature chips -->
@@ -137,7 +138,7 @@
         <button id="checkout-btn" class="btn-dark" type="button">
           Checkout →
         </button>
-        
+
       </div>
 
     </div>
@@ -150,14 +151,12 @@
 
       <div class="modal-header">
 
-        <div>
-          <h2 id="modal-title">
-            Confirm Order
-          </h2>
-
-          <p>
-            Review before submitting
-          </p>
+        <div class="modal-header-title-box">
+          <div class="modal-header-icon">📋</div>
+          <div>
+            <h2 id="modal-title">Confirm Order</h2>
+            <p>Review before submitting</p>
+          </div>
         </div>
 
         <button class="modal-close" id="modal-close" aria-label="Close" type="button">
@@ -166,32 +165,82 @@
 
       </div>
 
-      <!-- Cart items list -->
-      <div class="modal-items" id="modal-items" role="list">
+      <!-- Scrollable content area for compact height -->
+      <div class="modal-body-content">
+
+        <!-- Cart items list -->
+        <div class="modal-items" id="modal-items" role="list">
+        </div>
+
+        <!-- Totals: cartons, pouches, grand total -->
+        <div class="modal-totals" id="modal-totals">
+        </div>
+
+        <!-- Delivery address note -->
+        <div class="modal-delivery" id="modal-delivery">
+          <span class="modal-delivery-icon">🚚</span>
+          <span id="delivery-text"></span>
+        </div>
+
+        <!-- Credit limit validation warning -->
+        <div id="modal-credit-warning"
+          style="display:none; color: #ef4444; font-size: 11px; margin: 0.35rem 1.15rem; text-align: center;">
+          ⚠️ Insufficient B2B credit.
+        </div>
+
+        <!-- Recurring Order Custom Controls -->
+        <div class="recurring-order-container">
+
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:12.5px; font-weight:600; color:var(--brown);">
+                🔂 Auto-Delivery Subscription
+              </div>
+              <div style="font-size:10.5px; color:var(--muted); margin-top:1px;">
+                Automatically repeat this order, cancel anytime.
+              </div>
+            </div>
+
+            <!-- Custom toggle switch -->
+            <label class="switch"
+              style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
+              <input type="checkbox" id="recurringOrder" style="opacity:0; width:0; height:0;">
+              <span class="slider"
+                style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#E0D5C8; transition:.3s; border-radius:20px;"></span>
+            </label>
+          </div>
+
+          <!-- Frequency options container (sliding transition) -->
+          <div id="recurring-options"
+            style="max-height:0; overflow:hidden; transition:max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-top:0;">
+            <div style="display:flex; gap:0.4rem; margin-top:0.6rem;">
+              <button type="button" class="freq-btn active" data-value="weekly"
+                style="flex:1; padding:0.45rem; border:1.5px solid var(--amber); border-radius:8px; background:#fffbeb; color:var(--brown); font-size:11.5px; font-weight:600; cursor:pointer; text-align:center; transition:all 0.2s;">
+                Weekly
+              </button>
+              <button type="button" class="freq-btn" data-value="monthly"
+                style="flex:1; padding:0.45rem; border:1.5px solid #E0D5C8; border-radius:8px; background:#fff; color:var(--brown); font-size:11.5px; font-weight:500; cursor:pointer; text-align:center; transition:all 0.2s;">
+                Monthly
+              </button>
+              <button type="button" class="freq-btn" data-value="yearly"
+                style="flex:1; padding:0.45rem; border:1.5px solid #E0D5C8; border-radius:8px; background:#fff; color:var(--brown); font-size:11.5px; font-weight:500; cursor:pointer; text-align:center; transition:all 0.2s;">
+                Yearly
+              </button>
+            </div>
+            <!-- Hidden field to preserve compatibility with existing backend script -->
+            <input type="hidden" id="deliveryInterval" value="weekly">
+          </div>
+
+        </div>
+
       </div>
 
-      <!-- Totals: cartons, pouches, grand total -->
-      <div class="modal-totals" id="modal-totals">
-      </div>
-
-      <!-- Delivery address note -->
-      <div class="modal-delivery" id="modal-delivery">
-
-        📦 <span id="delivery-text"></span>
-
-      </div>
-
-      <!-- Credit limit validation warning -->
-      <div id="modal-credit-warning" style="display:none; color: #ef4444; font-size: 11px; margin: 0.5rem 1.5rem; text-align: center;">
-        ⚠️ Insufficient B2B credit.
-      </div>
-
-      <div class="modal-actions" style="display:flex; flex-direction:column; gap:0.5rem; width:100%; padding:1rem 1.5rem; box-sizing:border-box;">
+      <div class="modal-actions">
         <div style="display:flex; gap:0.5rem; width:100%;">
           <button class="btn-ghost btn-full" id="modal-back" type="button" style="flex:1;">
             Go Back
           </button>
-          
+
           <button class="btn-dark btn-full" id="modal-place-stripe" type="button" style="flex:1;">
             Pay Online (Card) →
           </button>
@@ -200,44 +249,6 @@
         <button class="btn-amber btn-full" id="modal-place-credit" type="button" style="width:100%; display:none;">
           Use B2B Credit (Net 30) →
         </button>
-      </div>
-      <!-- Recurring Order Custom Controls -->
-      <div class="recurring-order-container" style="margin: 0.5rem 1.5rem 1.5rem; padding: 1rem; background: #FAF8F5; border: 1px solid #E8DDD0; border-radius: 14px; box-sizing: border-box;">
-        
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <div style="font-size:13px; font-weight:600; color:var(--brown);">
-              🔂 Auto-Delivery Subscription
-            </div>
-            <div style="font-size:11px; color:var(--muted); margin-top:2px;">
-              Automatically repeat this order, cancel anytime.
-            </div>
-          </div>
-          
-          <!-- Custom toggle switch -->
-          <label class="switch" style="position:relative; display:inline-block; width:44px; height:24px; cursor:pointer;">
-            <input type="checkbox" id="recurringOrder" style="opacity:0; width:0; height:0;">
-            <span class="slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:#E0D5C8; transition:.3s; border-radius:24px;"></span>
-          </label>
-        </div>
-
-        <!-- Frequency options container (sliding transition) -->
-        <div id="recurring-options" style="max-height:0; overflow:hidden; transition:max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-top:0;">
-          <div style="display:flex; gap:0.5rem; margin-top:1rem;">
-            <button type="button" class="freq-btn active" data-value="weekly" style="flex:1; padding:0.6rem; border:1.5px solid var(--amber); border-radius:10px; background:#fffbeb; color:var(--brown); font-size:12px; font-weight:600; cursor:pointer; text-align:center; transition:all 0.2s;">
-              Weekly
-            </button>
-            <button type="button" class="freq-btn" data-value="monthly" style="flex:1; padding:0.6rem; border:1.5px solid #E0D5C8; border-radius:10px; background:#fff; color:var(--brown); font-size:12px; font-weight:500; cursor:pointer; text-align:center; transition:all 0.2s;">
-              Monthly
-            </button>
-            <button type="button" class="freq-btn" data-value="yearly" style="flex:1; padding:0.6rem; border:1.5px solid #E0D5C8; border-radius:10px; background:#fff; color:var(--brown); font-size:12px; font-weight:500; cursor:pointer; text-align:center; transition:all 0.2s;">
-              Yearly
-            </button>
-          </div>
-          <!-- Hidden field to preserve compatibility with existing backend script -->
-          <input type="hidden" id="deliveryInterval" value="weekly">
-        </div>
-
       </div>
 
     </div>
@@ -299,9 +310,9 @@
           if (!dbProfile.company_name || !dbProfile.business_type || !dbProfile.delivery_address) {
             console.log("Logged-in session profile incomplete. Routing to completion page...");
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            
-            window.location.replace(isLocalhost 
-              ? window.location.origin + '/espressgo_b2b_portal/complete-profile.html' 
+
+            window.location.replace(isLocalhost
+              ? window.location.origin + '/espressgo_b2b_portal/complete-profile.html'
               : window.location.origin + '/complete-profile.html'
             );
           } else {
@@ -313,8 +324,8 @@
         } else {
           // Row missing entirely (Brand new authenticated Google signup)
           const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-          window.location.replace(isLocalhost 
-            ? window.location.origin + '/espressgo_b2b_portal/complete-profile.html' 
+          window.location.replace(isLocalhost
+            ? window.location.origin + '/espressgo_b2b_portal/complete-profile.html'
             : window.location.origin + '/complete-profile.html'
           );
         }

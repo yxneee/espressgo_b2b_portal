@@ -1,219 +1,502 @@
-/* ==========================================================
-   subscriptions.css
-   Matches catalog.css design system
-   ========================================================== */
+/* ============================================================
+   subscriptions.css — Premium B2B Subscriptions Styling
+   Depends on: shared.css (must be loaded first)
+   Matches: quick-order.css, catalog.css design system
+   ============================================================ */
 
-.subscription-card {
-  background: #fff;
-  border: 1px solid #E8DDD0;
-  border-radius: 24px;
-  padding: 1.5rem;
-  max-width: 900px;
-  margin: 0 auto;
-  box-shadow: 0 4px 18px rgba(0,0,0,.05);
+/* ── Hero section ────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #2C1810 0%, #3D2817 100%);
+  border-radius: 20px;
+  padding: 2.25rem 2rem;
+  color: #FFF;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 10px 30px rgba(44, 24, 16, 0.15);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Product list */
-
-#subscription-items {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -2rem;
+  top: -2rem;
+  width: 14rem;
+  height: 14rem;
+  background: radial-gradient(circle, rgba(200, 133, 58, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
+  pointer-events: none;
 }
 
-/* Individual product */
-
-.subscription-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid #E8DDD0;
-  border-radius: 16px;
-  background: #FAF8F5;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
 }
 
-.subscription-item:hover {
-  transform: translateY(-3px);
-  border-color: rgba(200, 133, 58, 0.4);
-  box-shadow: 0 10px 24px rgba(44, 24, 16, 0.05);
-}
-
-.subscription-product {
-  flex: 1;
-}
-
-.subscription-product label {
-  display: flex;
+.hero-badge {
+  display: inline-flex;
   align-items: center;
-  gap: .75rem;
-  cursor: pointer;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(200, 133, 58, 0.2);
+  border: 1px solid rgba(200, 133, 58, 0.35);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #F5E0C8;
+  margin-bottom: 0.75rem;
 }
 
-.subscription-product strong {
-  color: var(--brown);
-  font-size: 15px;
+.hero h1 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #FFF;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
 }
 
-.subscription-subtitle {
-  margin-top: .4rem;
-  margin-left: 2rem;
-  font-size: 13px;
-  color: var(--muted);
+.hero p {
+  font-size: 14px;
+  color: #D6C7BC;
   line-height: 1.5;
 }
 
-/* Checkbox */
-
-.subscription-checkbox {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--amber);
-  cursor: pointer;
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.3rem 0.75rem;
+  border-radius: 12px;
+  font-size: 11.5px;
+  color: #E8DDD0;
+  font-weight: 500;
 }
 
-/* Quantity */
+/* ── Page Layout ─────────────────────────────────────────── */
+.sub-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
 
-.subscription-controls {
+@media (min-width: 1100px) {
+  .sub-layout {
+    flex-direction: row;
+  }
+  .sub-config-col {
+    flex: 1;
+    min-width: 0;
+  }
+  .sub-summary-col {
+    width: 350px;
+    flex-shrink: 0;
+  }
+}
+
+/* ── Sub Cards ────────────────────────────────────────────── */
+.sub-card {
+  background: #fff;
+  border: 1px solid #E8DDD0;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(44, 24, 16, 0.04);
+}
+
+.sub-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.sub-card-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brown);
+  margin: 0 0 0.25rem 0;
+}
+
+.sub-card-header p {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.btn-ghost-sm {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--amber);
+  text-decoration: none;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid rgba(200, 133, 58, 0.3);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-ghost-sm:hover {
+  background: #FEF3E2;
+  border-color: var(--amber);
+}
+
+/* ── Product Rows ─────────────────────────────────────────── */
+.sub-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.sub-item-row {
   display: flex;
   align-items: center;
-}
-
-.subscription-qty {
-  width: 90px;
-  padding: .65rem;
-  text-align: center;
-  border: 1px solid #E0D5C8;
-  border-radius: 10px;
-  background: #fff;
-  color: var(--brown);
-  font-size: 14px;
-}
-
-.subscription-qty:focus {
-  outline: none;
-  border-color: var(--amber);
-  box-shadow: 0 0 0 3px rgba(200,133,58,.12);
-}
-
-/* Total */
-
-#subscription-total {
-  margin-top: 1.5rem;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #FAF8F5;
+  border: 1px solid #EDE8E3;
+  border-radius: 16px;
   padding: 1rem 1.25rem;
-  background: #FEF3E2;
-  border: 1px solid #F5D9B0;
-  border-radius: 14px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-#subscription-total h3 {
-  margin: 0;
-  color: var(--amber);
-  font-size: 1.35rem;
+.sub-item-row:hover {
+  border-color: rgba(200, 133, 58, 0.4);
+  box-shadow: 0 6px 16px rgba(44, 24, 16, 0.06);
+  background: #FFF;
 }
 
-/* Frequency */
-
-.form-group {
-  margin-top: 1.5rem;
+.sub-item-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
 }
 
-.form-group label {
-  display: block;
-  margin-bottom: .5rem;
-  color: var(--brown);
-  font-weight: 600;
-}
-
-.form-group select {
-  width: 100%;
-  padding: .85rem 1rem;
-  border: 1px solid #E0D5C8;
+.sub-item-icon {
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
-  background: #fff;
-  color: var(--brown);
-  font-size: 14px;
-}
-
-.form-group select:focus {
-  outline: none;
-  border-color: var(--amber);
-  box-shadow: 0 0 0 3px rgba(200,133,58,.12);
-}
-
-/* CTA */
-
-#create-subscription-btn {
-  width: 100%;
-  margin-top: 1.5rem;
-}
-
-/* Selected state */
-
-.subscription-item:has(.subscription-checkbox:checked) {
-  border-color: var(--amber);
-  background: #FEF3E2;
-}
-
-/* Mobile */
-
-@media (max-width: 700px) {
-
-  .subscription-item {
-    flex-direction: column;
-  }
-
-  .subscription-controls {
-    width: 100%;
-  }
-
-  .subscription-qty {
-    width: 100%;
-  }
-}
-
-.qty-grid {
-  margin-top: 1rem;
-
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: .5rem;
-}
-
-.qty-box {
-  position: relative;
-  cursor: pointer;
-}
-
-.qty-box input {
-  position: absolute;
-  opacity: 0;
-}
-
-.qty-box span {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  background: rgba(200, 133, 58, 0.12);
+}
 
-  height: 40px;
+.sub-item-info {
+  min-width: 0;
+}
 
+.sub-item-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brown);
+  margin-bottom: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sub-item-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.sub-item-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* Stepper inside item */
+.sub-stepper {
+  display: flex;
+  align-items: center;
+  background: #FFF;
   border: 1px solid #E0D5C8;
   border-radius: 10px;
+  overflow: hidden;
+  height: 38px;
+}
 
-  background: white;
+.sub-stepper-btn {
+  width: 36px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
   color: var(--brown);
-
-  transition: all .15s ease;
-}
-
-.qty-box:hover span {
-  border-color: var(--amber);
-}
-
-.qty-box input:checked + span {
-  background: #FEF3E2;
-  border-color: var(--amber);
-  color: var(--amber);
+  font-size: 16px;
   font-weight: 700;
+  transition: background 0.15s;
+}
+
+.sub-stepper-btn:hover {
+  background: #F5E6D3;
+}
+
+.sub-stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.sub-stepper-input {
+  width: 55px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  border-left: 1px solid #E0D5C8;
+  border-right: 1px solid #E0D5C8;
+  padding: 0.25rem;
+  color: var(--brown);
+  font-size: 13.5px;
+  font-weight: 700;
+  outline: none;
+}
+
+.sub-item-subtotal {
+  text-align: right;
+  min-width: 90px;
+}
+
+.sub-item-subtotal .amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brown);
+}
+
+.sub-item-subtotal .rate {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.sub-item-remove {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s;
+}
+
+.sub-item-remove:hover {
+  color: #ef4444;
+}
+
+/* ── Delivery Cadence Grid ───────────────────────────────── */
+.frequency-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.freq-card {
+  background: #FAF8F5;
+  border: 2px solid #EDE8E3;
+  border-radius: 16px;
+  padding: 1.15rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.freq-card:hover {
+  border-color: rgba(200, 133, 58, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(44, 24, 16, 0.06);
+}
+
+.freq-card.active {
+  background: #FFF7ED;
+  border-color: var(--amber);
+  box-shadow: 0 6px 20px rgba(200, 133, 58, 0.15);
+}
+
+.freq-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #E0D5C8;
+  color: var(--brown);
+  margin-bottom: 0.5rem;
+}
+
+.freq-badge.popular {
+  background: var(--amber);
+  color: #FFF;
+}
+
+.freq-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--brown);
+}
+
+.freq-subtitle {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--amber);
+  margin-top: 2px;
+}
+
+.freq-desc {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.35;
+  margin-top: 0.4rem;
+}
+
+/* ── Guarantee Card ───────────────────────────────────────── */
+.sub-guarantee-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 16px;
+  padding: 1.15rem 1.25rem;
+}
+
+.guarantee-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.sub-guarantee-card strong {
+  display: block;
+  font-size: 13.5px;
+  color: #15803D;
+  margin-bottom: 0.25rem;
+}
+
+.sub-guarantee-card p {
+  font-size: 12px;
+  color: #166534;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ── Order Summary Sidebar ───────────────────────────────── */
+.summary-card {
+  background: #fff;
+  border: 1px solid #E8DDD0;
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(44, 24, 16, 0.05);
+  overflow: hidden;
+}
+
+@media (min-width: 1100px) {
+  .summary-card {
+    position: sticky;
+    top: 90px;
+  }
+}
+
+.summary-header {
+  background: linear-gradient(135deg, #2C1810, #3D2817);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-header::before {
+  content: '';
+  position: absolute;
+  top: -1.5rem;
+  right: -1.5rem;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .06);
+}
+
+.summary-body {
+  padding: 1.5rem;
+}
+
+.summary-line {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  font-size: 13px;
+}
+
+.summary-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.summary-thumb {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.summary-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.summary-totals {
+  border-top: 1px solid #F0EAE4;
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.summary-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--brown-lt);
+}
+
+.savings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: .5rem .85rem;
+}
+
+.empty-card {
+  max-width: 600px;
+  margin: 2rem auto;
+  text-align: center;
+  padding: 3.5rem 2rem;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 700px) {
+  .sub-item-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+  .sub-item-right {
+    justify-content: space-between;
+  }
+  .frequency-grid {
+    grid-template-columns: 1fr;
+  }
 }

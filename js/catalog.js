@@ -714,30 +714,41 @@ function openModal() {
   const deliveryText = document.getElementById("delivery-text");
 
   if (modalItems) {
-    modalItems.innerHTML = lines.map(({ p, qty, tier, subtotal }) => `
-      <div class="modal-item" role="listitem">
+    modalItems.innerHTML = lines.map(({ p, qty, tier, subtotal }) => {
+      const imgUrl = p.imageUrl || p.image_url;
+      let visualHtml = '';
+      if (imgUrl) {
+        visualHtml = `<img src="${safeEscape(imgUrl)}" alt="${safeEscape(p.name || '')}" />`;
+      } else if (typeof miniPouchSVG === 'function') {
+        visualHtml = miniPouchSVG(p.pouchColor || '#C8580A', p.pouchAccent || '#8B3A00', 32);
+      } else {
+        visualHtml = `<div style="width:28px;height:38px;background:${p.pouchColor || '#C8580A'};border-radius:6px;"></div>`;
+      }
 
-        <div
-          class="modal-item-color"
-          style="background:${p.pouchColor};">
-        </div>
+      return `
+        <div class="modal-item" role="listitem">
 
-        <div>
-          <div class="modal-item-name">
-            ${safeEscape(p.name)}
+          <div class="modal-item-thumb">
+            ${visualHtml}
           </div>
 
-          <div class="modal-item-detail">
-            ${qty} ctn × SGD $${Number(tier.price || 0).toFixed(2)}
+          <div class="modal-item-info">
+            <div class="modal-item-name">
+              ${safeEscape(p.name)}
+            </div>
+
+            <div class="modal-item-detail">
+              <span class="qty-pill">${qty} ctn</span> × SGD $${Number(tier.price || 0).toFixed(2)}
+            </div>
           </div>
-        </div>
 
-        <div class="modal-item-total">
-          SGD $${subtotal.toFixed(2)}
-        </div>
+          <div class="modal-item-total">
+            SGD $${subtotal.toFixed(2)}
+          </div>
 
-      </div>
-    `).join("");
+        </div>
+      `;
+    }).join("");
   }
 
   const tc = totalCartons();
@@ -746,18 +757,13 @@ function openModal() {
   if (modalTotals) {
     modalTotals.innerHTML = `
       <div class="modal-total-row">
-        <span>Cartons</span>
-        <span>${tc}</span>
-      </div>
-
-      <div class="modal-total-row">
-        <span>Pouches</span>
-        <span>${(tc * 50).toLocaleString()}</span>
+        <span>Cartons & Pouches</span>
+        <span>${tc} ctn · ${(tc * 50).toLocaleString()} pouches</span>
       </div>
 
       <div class="modal-total-row main">
         <span>Order total</span>
-        <span style="color:var(--amber);font-size:1.2rem;">
+        <span style="color:var(--amber);font-size:1.15rem;font-weight:700;">
           SGD $${tp.toFixed(2)}
         </span>
       </div>
@@ -947,7 +953,7 @@ function bindCheckoutButtons() {
         const interval = document.getElementById("deliveryInterval").value;
 
         if (recurring) {
-          console.log("Recurring order detected. Redirecting to subscription setup...");
+          console.log("Recurring card order detected. Redirecting to subscription page with Card pre-selected...");
           
           sessionStorage.setItem("subscriptionCart", JSON.stringify(
             lines.map(line => ({
@@ -955,11 +961,15 @@ function bindCheckoutButtons() {
               name: line.p.name,
               cartons: line.qty,
               price_per_carton: line.tier.price,
-              subtotal: line.subtotal
+              subtotal: line.subtotal,
+              imageUrl: line.p.imageUrl || line.p.image_url,
+              pouchColor: line.p.pouchColor,
+              pouchAccent: line.p.pouchAccent
             }))
           ));
           
           sessionStorage.setItem("subscriptionInterval", interval);
+          sessionStorage.setItem("preferCreditPayment", "false");
           window.location.href = "subscriptions.html";
           return; 
         }
@@ -1013,6 +1023,29 @@ function bindCheckoutButtons() {
         }
 
         const lines = getOrderLines();
+        const recurring = document.getElementById("recurringOrder")?.checked;
+        const interval = document.getElementById("deliveryInterval")?.value || "monthly";
+
+        if (recurring) {
+          console.log("Recurring credit order detected. Redirecting to subscription page with B2B Credit pre-selected...");
+          sessionStorage.setItem("subscriptionCart", JSON.stringify(
+            lines.map(line => ({
+              product_id: line.p.id,
+              name: line.p.name,
+              cartons: line.qty,
+              price_per_carton: line.tier.price,
+              subtotal: line.subtotal,
+              imageUrl: line.p.imageUrl || line.p.image_url,
+              pouchColor: line.p.pouchColor,
+              pouchAccent: line.p.pouchAccent
+            }))
+          ));
+          sessionStorage.setItem("subscriptionInterval", interval);
+          sessionStorage.setItem("preferCreditPayment", "true");
+          window.location.href = "subscriptions.html";
+          return;
+        }
+
         const orderObj = {
           totalCartons: totalCartons(),
           totalAmount: totalPrice(),
@@ -1120,12 +1153,20 @@ const freqButtons = document.querySelectorAll('.freq-btn');
 
 if (recurringOrder && recurringOptions && deliveryInterval) {
   recurringOrder.addEventListener('change', () => {
+    const stripeBtn = document.getElementById('modal-place-stripe');
+    const creditBtn = document.getElementById('modal-place-credit');
+    const terms = user && user.paymentTerms ? user.paymentTerms : 'Net 30';
+
     if (recurringOrder.checked) {
-      recurringOptions.style.maxHeight = '80px';
+      recurringOptions.style.maxHeight = '120px';
       recurringOptions.style.marginTop = '0.5rem';
+      if (stripeBtn) stripeBtn.textContent = 'Configure Subscription (Card) →';
+      if (creditBtn) creditBtn.textContent = `Configure Subscription (${terms}) →`;
     } else {
       recurringOptions.style.maxHeight = '0';
       recurringOptions.style.marginTop = '0';
+      if (stripeBtn) stripeBtn.textContent = 'Pay Online (Card) →';
+      if (creditBtn) creditBtn.textContent = `Use B2B Credit (${terms}) →`;
     }
   });
 }

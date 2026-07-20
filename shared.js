@@ -657,16 +657,15 @@ const Orders = {
     const nestedItems = Array.isArray(row.order_items) ? row.order_items : [];
     const legacyItems = Array.isArray(row.items) ? row.items : [];
 
-    const items = nestedItems.length
-      ? nestedItems.map(item => ({
-        id: item.id,
-        productId: item.product_id,
-        sku: item.sku,
-        name: item.name,
-        cartons: Number(item.cartons || 0),
-        pricePerCarton: Number(item.price_per_carton || 0)
-      }))
-      : legacyItems;
+    const rawItems = nestedItems.length ? nestedItems : legacyItems;
+    const items = rawItems.map(item => ({
+      id: item.id,
+      productId: item.productId || item.product_id,
+      sku: item.sku || '',
+      name: item.name || item.product_name || (item.products ? item.products.name : '') || 'ESPRESSGO Product',
+      cartons: Number(item.cartons ?? item.qty ?? item.quantity ?? 1),
+      pricePerCarton: Number(item.pricePerCarton ?? item.price_per_carton ?? item.price ?? 0)
+    }));
 
     return {
       id: String(row.id),
@@ -783,7 +782,7 @@ function buildNav(activePage) {
 
   const rightDesktop = loggedIn ? `
     ${showAdminButton ? `
-      <a href="${adminPrefix}admin-dashboard.html" class="nav-admin-btn" style="font-size:12px;">🛡 Admin</a>
+      <a href="${adminPrefix}admin-dashboard.html" class="nav-admin-btn">🛡 Admin</a>
       <div class="nav-divider"></div>
     ` : ''}
 
@@ -791,37 +790,37 @@ function buildNav(activePage) {
       <button
         id="user-menu-btn"
         type="button"
-        style="display:flex;align-items:center;gap:.6rem;padding:.4rem .6rem;border-radius:10px;background:none;border:none;cursor:pointer;transition:background .15s;"
-        onmouseover="this.style.background='rgba(255,255,255,.08)'"
-        onmouseout="this.style.background='none'">
+        style="display:flex;align-items:center;gap:.65rem;padding:.4rem .75rem;border-radius:24px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);cursor:pointer;transition:all .2s;"
+        onmouseover="this.style.background='rgba(255,255,255,.12)';this.style.borderColor='rgba(212,136,59,.4)'"
+        onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)'">
 
-        <div style="width:32px;height:32px;background:rgba(200,133,58,.25);border:1px solid rgba(200,133,58,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#D4A574;">
+        <div style="width:34px;height:34px;background:linear-gradient(135deg, #D4883B, #8B4A10);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#FFF;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
           ${escapeHTML(initials)}
         </div>
 
-        <div style="text-align:left;display:none;" class="xl-show">
-          <div style="font-size:12px;color:#F5E6D3;">${safeCompany}</div>
-          <div style="font-size:10px;color:#6B5744;">${safeEmail}</div>
+        <div style="text-align:left;display:flex;flex-direction:column;justify-content:center;">
+          <div style="font-size:12.5px;font-weight:600;color:#FFF;line-height:1.2;">${safeCompany || 'My Business'}</div>
+          <div style="font-size:10px;color:#D4A574;line-height:1.2;margin-top:1px;">${safeEmail}</div>
         </div>
 
-        <span style="color:#6B5744;font-size:11px;">▾</span>
+        <span style="color:#D4A574;font-size:11px;margin-left:2px;">▾</span>
       </button>
 
       <div
         id="user-menu-dropdown"
-        style="display:none;position:absolute;right:0;top:calc(100% + 8px);width:210px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);border:1px solid #EDE8E3;overflow:hidden;z-index:200;">
+        style="display:none;position:absolute;right:0;top:calc(100% + 10px);width:220px;background:#FFF;border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.2);border:1px solid #EDE8E3;overflow:hidden;z-index:200;">
 
-        <div style="padding:.75rem 1rem;border-bottom:1px solid #F0EAE4;">
-          <div style="font-size:14px;color:#2C1810;">${safeCompany}</div>
-          <div style="font-size:11px;color:#8B7355;">${safeEmail}</div>
+        <div style="padding:1rem;border-bottom:1px solid #F0EAE4;background:#FAF8F5;">
+          <div style="font-size:13.5px;font-weight:700;color:#2C1810;">${safeCompany || 'My Business'}</div>
+          <div style="font-size:11px;color:#8B7355;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${safeEmail}</div>
         </div>
 
         <a
           href="${rootPrefix}account.html"
-          style="display:flex;align-items:center;gap:.6rem;padding:.65rem 1rem;font-size:14px;color:#2C1810;text-decoration:none;transition:background .15s;"
+          style="display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;font-size:13.5px;font-weight:500;color:#2C1810;text-decoration:none;transition:background .15s;"
           onmouseover="this.style.background='#FAF8F5'"
           onmouseout="this.style.background='none'">
-          👤 My Account
+          👤 My B2B Account
         </a>
 
         <div style="height:1px;background:#F0EAE4;"></div>
@@ -829,7 +828,7 @@ function buildNav(activePage) {
         <button
           onclick="handleLogout()"
           type="button"
-          style="width:100%;display:flex;align-items:center;gap:.6rem;padding:.65rem 1rem;font-size:14px;color:#ef4444;background:none;border:none;cursor:pointer;transition:background .15s;"
+          style="width:100%;display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;font-size:13.5px;font-weight:500;color:#ef4444;background:none;border:none;cursor:pointer;transition:background .15s;"
           onmouseover="this.style.background='#fff5f5'"
           onmouseout="this.style.background='none'">
           🚪 Sign Out
@@ -1071,6 +1070,16 @@ function miniPouchSVG(color, accent, size = 32) {
   `;
 }
 
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 /* ============================================================
    Make helpers available globally
