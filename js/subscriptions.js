@@ -139,8 +139,8 @@ async function renderSubscriptionSummary() {
 
   let rawData = sessionStorage.getItem("subscriptionCart");
 
-  // Fallback: If subscriptionCart is empty, attempt to convert local cart from localStorage
-  if (!rawData || JSON.parse(rawData).length === 0) {
+  // Fallback: If subscriptionCart is null (not yet initialized), attempt to convert local cart from localStorage
+  if (rawData === null) {
     const localCartStr = localStorage.getItem("espressgo_cart");
     if (localCartStr) {
       try {
@@ -178,7 +178,14 @@ async function renderSubscriptionSummary() {
   const mainLayout = document.getElementById("sub-main-layout");
   const emptyState = document.getElementById("sub-empty-state");
 
-  if (!rawData || JSON.parse(rawData).length === 0) {
+  let parsedItems = [];
+  try {
+    parsedItems = rawData ? JSON.parse(rawData) : [];
+  } catch (e) {
+    parsedItems = [];
+  }
+
+  if (!parsedItems || parsedItems.length === 0) {
     importedItems = [];
     if (mainLayout) mainLayout.style.display = "none";
     if (emptyState) emptyState.style.display = "block";
