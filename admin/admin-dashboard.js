@@ -1482,31 +1482,28 @@ window.deleteFaq = deleteFaq;
 
 async function loadAdminSubscriptions() {
   try {
-    const { data, error } = await sb
-      .from("subscriptions")
-      .select(`
-        id,
-        created_at,
-        frequency,
-        status,
-        profiles(company_name),
-        subscription_items(
-          id,
-          cartons,
-          price_per_carton,
-          product_id,
-          products (
-            id,
-            name,
-            sku
-          )
-        )
-      `);
+    // Get the current session token to authenticate the request
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) throw new Error("No active session");
 
-    if (error) throw error;
-    renderAdminSubscriptions(data || []);
+    const res = await fetch("/api/admin-subscriptions", {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + session.access_token,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.error || "Failed to fetch subscriptions");
+    }
+
+    const { subscriptions } = await res.json();
+    renderAdminSubscriptions(subscriptions || []);
   } catch (err) {
     console.error("Subscription load failed:", err);
+    showToast("Subscriptions Error", err.message || "Could not load subscriptions.", "error");
   }
 }
 
