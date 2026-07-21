@@ -553,6 +553,16 @@ function renderSummary() {
     summaryTotals.style.display = 'none';
   }
 
+  // Show/hide subscription option container based on items
+  const subOptionContainer = document.getElementById('subscription-option-container');
+  const subToggleInput = document.getElementById('subscription-toggle');
+  if (subOptionContainer) {
+    subOptionContainer.style.display = hasLines ? 'block' : 'none';
+  }
+  if (subToggleInput) {
+    subToggleInput.checked = false;
+  }
+
   // --- B2B Credit Limit Check & Payment Options ---
   const creditWarning = document.getElementById("quick-order-credit-warning");
  
@@ -579,6 +589,42 @@ function renderSummary() {
     }
   }
 }
+
+
+/* ============================================================
+   Subscription Toggle Handlers
+   ============================================================ */
+
+function handleSubscriptionToggle(checkbox) {
+  if (checkbox && checkbox.checked) {
+    const lines = getOrderLines();
+    if (lines.length > 0) {
+      const subCart = lines.map(line => {
+        return {
+          product_id: line.p.id,
+          id: line.p.id,
+          name: line.p.name,
+          cartons: line.qty,
+          quantity: line.qty,
+          qty: line.qty,
+          price_per_carton: line.tier.price,
+          price: line.tier.price,
+          subtotal: line.subtotal,
+          imageUrl: line.p.imageUrl || '',
+          pouchColor: line.p.pouchColor || '#C8580A',
+          pouchAccent: line.p.pouchAccent || '#8B3A00'
+        };
+      });
+      sessionStorage.setItem("subscriptionCart", JSON.stringify(subCart));
+      
+      // Visual feedback transition before redirecting
+      setTimeout(() => {
+        window.location.href = "subscriptions.html";
+      }, 300);
+    }
+  }
+}
+window.handleSubscriptionToggle = handleSubscriptionToggle;
 
 
 /* ============================================================
